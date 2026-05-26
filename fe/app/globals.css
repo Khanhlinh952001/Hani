@@ -1,0 +1,493 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Hani — romantic blush & rose */
+:root {
+  --hani: oklch(0.68 0.17 12);
+  --hani-deep: oklch(0.52 0.2 8);
+  --hani-blush: oklch(0.94 0.045 350);
+  --hani-glow: oklch(0.88 0.08 340);
+  --hani-connected: oklch(0.72 0.14 145);
+  --hani-gradient: linear-gradient(
+    145deg,
+    oklch(0.66 0.2 12) 0%,
+    oklch(0.58 0.19 350) 55%,
+    oklch(0.52 0.2 8) 100%
+  );
+
+  --background: oklch(0.988 0.014 350);
+  --foreground: oklch(0.3 0.045 350);
+  --card: oklch(0.997 0.01 350);
+  --card-foreground: oklch(0.3 0.045 350);
+  --popover: oklch(0.998 0.008 350);
+  --popover-foreground: oklch(0.3 0.045 350);
+
+  --primary: oklch(0.62 0.2 12);
+  --primary-foreground: oklch(0.99 0.006 350);
+
+  --secondary: oklch(0.94 0.05 350);
+  --secondary-foreground: oklch(0.34 0.07 350);
+
+  --muted: oklch(0.96 0.028 350);
+  --muted-foreground: oklch(0.52 0.05 350);
+
+  --accent: oklch(0.93 0.065 340);
+  --accent-foreground: oklch(0.4 0.1 350);
+
+  --destructive: oklch(0.58 0.2 22);
+  --border: oklch(0.91 0.035 350);
+  --input: oklch(0.93 0.03 350);
+  --ring: oklch(0.62 0.2 12);
+  --radius: 0.875rem;
+
+  --user-bubble: oklch(0.93 0.06 350);
+  --hani-bubble: oklch(0.995 0.012 350);
+}
+
+@theme inline {
+  --font-sans: var(--font-noto);
+  --font-display: var(--font-gowun);
+  --font-heading: var(--font-noto);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-hani: var(--hani);
+  --color-hani-blush: var(--hani-blush);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply min-h-dvh bg-background text-foreground antialiased;
+    font-family: var(--font-noto), "Apple SD Gothic Neo", sans-serif;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 90% 55% at 15% -5%,
+        oklch(0.88 0.1 350 / 0.5),
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 70% 50% at 95% 15%,
+        oklch(0.92 0.07 12 / 0.28),
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse 80% 60% at 50% 110%,
+        oklch(0.94 0.06 340 / 0.38),
+        transparent 55%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+.font-display {
+  font-family: var(--font-gowun), serif;
+  letter-spacing: -0.02em;
+}
+
+/* App shell & shared chrome */
+@layer components {
+  .hani-app-frame {
+    @apply relative isolate overflow-hidden;
+  }
+  .hani-app-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      oklch(0.97 0.04 350 / 0.5) 0%,
+      transparent 28%,
+      transparent 72%,
+      oklch(0.94 0.05 12 / 0.2) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hani-shell-inner {
+    @apply relative z-10 flex min-h-0 flex-1 flex-col;
+  }
+
+  .hani-header {
+    @apply border-b border-primary/10 bg-card/75 backdrop-blur-xl;
+    box-shadow: 0 1px 0 oklch(1 0 0 / 0.6) inset;
+  }
+
+  .hani-hero {
+    @apply relative overflow-hidden rounded-2xl border border-primary/12 px-5 py-6 text-center;
+    background: linear-gradient(
+      160deg,
+      oklch(0.97 0.04 350 / 0.9) 0%,
+      oklch(0.95 0.06 12 / 0.25) 100%
+    );
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.7) inset,
+      0 8px 32px oklch(0.6 0.12 12 / 0.08);
+  }
+  .hani-hero::after {
+    content: "♡";
+    position: absolute;
+    right: 1rem;
+    top: 0.75rem;
+    font-size: 0.75rem;
+    color: oklch(0.7 0.14 12 / 0.35);
+  }
+
+  .hani-mode-card {
+    @apply overflow-hidden border-primary/12 bg-card/90 transition-all duration-300;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.65) inset,
+      0 4px 20px oklch(0.55 0.1 350 / 0.06);
+  }
+  .hani-mode-card:hover {
+    @apply border-primary/30 bg-accent/25;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.7) inset,
+      0 12px 36px oklch(0.6 0.15 12 / 0.14);
+    transform: translateY(-2px);
+  }
+
+  .hani-mode-icon {
+    @apply flex size-12 shrink-0 items-center justify-center rounded-2xl text-primary;
+    background: linear-gradient(
+      145deg,
+      oklch(0.96 0.04 350) 0%,
+      oklch(0.9 0.1 12 / 0.35) 100%
+    );
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.55) inset,
+      0 4px 12px oklch(0.65 0.12 12 / 0.12);
+  }
+
+  .hani-auth-wrap {
+    @apply relative flex min-h-dvh items-center justify-center p-4;
+  }
+  .hani-auth-card {
+    @apply w-full max-w-sm overflow-hidden border-0 bg-card/95 backdrop-blur-xl;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.75) inset,
+      0 24px 64px oklch(0.55 0.14 12 / 0.18);
+  }
+  .hani-auth-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--hani-gradient);
+    border-radius: inherit;
+  }
+
+  .hani-auth-header {
+    @apply flex flex-col items-center gap-2 px-6 pb-1 pt-8 text-center;
+  }
+  .hani-auth-header h1 {
+    @apply m-0;
+  }
+  .hani-auth-header p {
+    @apply m-0 max-w-[16rem] leading-relaxed;
+  }
+
+  .hani-avatar-glow {
+    box-shadow:
+      0 0 0 3px oklch(1 0 0 / 0.85),
+      0 0 0 5px oklch(0.62 0.2 12 / 0.2),
+      0 8px 24px oklch(0.6 0.15 12 / 0.2);
+  }
+
+  .composer-bar {
+    @apply flex items-center gap-1.5 rounded-full border border-primary/15 bg-card/90 p-1.5 pl-4 shadow-lg shadow-primary/10 backdrop-blur-xl;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.65) inset,
+      0 8px 28px oklch(0.6 0.12 12 / 0.1);
+  }
+  .composer-input {
+    @apply h-10 flex-1 border-0 bg-transparent px-0 shadow-none focus-visible:border-0 focus-visible:ring-0;
+  }
+  .composer-send {
+    background: var(--hani-gradient);
+    @apply size-11 shrink-0 rounded-full border-0 text-primary-foreground shadow-md shadow-primary/30 transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-40;
+  }
+
+  .ptt-button {
+    background: var(--hani-gradient);
+    @apply relative size-[4.25rem] rounded-full border border-primary-foreground/15 text-primary-foreground shadow-xl shadow-primary/35 transition-transform;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.25) inset,
+      0 12px 40px oklch(0.55 0.18 12 / 0.35);
+  }
+  .ptt-button:not(:disabled):hover {
+    @apply scale-[1.02];
+  }
+  .ptt-button-active {
+    @apply scale-105 ring-4 ring-primary/30;
+  }
+
+  .hani-empty {
+    @apply flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center;
+  }
+  .message-scroll-wrap {
+    @apply relative min-h-0 flex-1;
+  }
+  .message-scroll-wrap::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2.5rem;
+    background: linear-gradient(to top, var(--background), transparent);
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0.85;
+  }
+
+  .bilingual-ko {
+    @apply m-0 text-[0.9375rem] leading-relaxed break-words whitespace-pre-wrap;
+  }
+  .bilingual-vi {
+    @apply mt-1.5 mb-0 text-xs leading-snug text-muted-foreground/90 break-words whitespace-pre-wrap;
+  }
+  .word-gloss {
+    @apply cursor-pointer border-0 border-b-2 border-dotted border-primary/60 bg-transparent p-0 text-inherit transition-colors;
+    font: inherit;
+  }
+  .word-gloss:hover,
+  .word-gloss-active {
+    @apply border-primary bg-primary/10;
+  }
+  .word-gloss-tip {
+    @apply mt-0.5 block text-xs font-medium text-primary;
+  }
+
+  .message-scroll {
+    @apply flex-1 px-4 py-5;
+  }
+
+  .bubble {
+    @apply max-w-[85%] rounded-[1.25rem] px-4 py-3 text-sm leading-relaxed;
+  }
+  .bubble-user {
+    @apply ml-auto rounded-br-sm border border-primary/12 text-secondary-foreground;
+    background: linear-gradient(
+      145deg,
+      var(--user-bubble) 0%,
+      oklch(0.89 0.09 350) 100%
+    );
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.4) inset,
+      0 4px 16px oklch(0.6 0.14 12 / 0.12);
+  }
+  .bubble-hani {
+    @apply mr-auto rounded-bl-sm border border-primary/10 text-card-foreground;
+    background: linear-gradient(
+      165deg,
+      var(--hani-bubble) 0%,
+      oklch(0.98 0.02 350) 100%
+    );
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.55) inset,
+      0 4px 14px oklch(0.65 0.1 350 / 0.1);
+  }
+  .bubble-partial {
+    @apply border-dashed border-primary/35 opacity-95;
+  }
+  .bubble-thinking {
+    @apply px-4 py-3.5;
+  }
+
+  .typing-dots {
+    @apply flex gap-1.5 py-0.5;
+  }
+  .typing-dots span {
+    @apply size-2 rounded-full;
+    background: var(--hani-gradient);
+    animation: bounce 1.2s ease infinite;
+  }
+  .typing-dots span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .typing-dots span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  .cursor-blink {
+    @apply text-primary;
+    animation: blink 0.9s step-end infinite;
+  }
+
+  .hani-footer {
+    @apply shrink-0 border-t border-primary/10 bg-card/80 p-4 backdrop-blur-xl;
+    box-shadow: 0 -8px 24px oklch(0.6 0.1 350 / 0.06);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-bar-in {
+    animation: barSlide 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hani-mode-card {
+    animation: cardRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hani-mode-card:nth-child(1) {
+    animation-delay: 0.06s;
+  }
+  .hani-mode-card:nth-child(2) {
+    animation-delay: 0.14s;
+  }
+  .hani-auth-card {
+    animation: cardRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .bubble-enter-user {
+    animation: bubbleInUser 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(min(var(--bubble-i, 0), 8) * 35ms);
+  }
+  .bubble-enter-hani {
+    animation: bubbleInHani 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(min(var(--bubble-i, 0), 8) * 35ms);
+  }
+  .bubble-streaming.bubble-hani {
+    animation: bubbleInHani 0.48s cubic-bezier(0.22, 1, 0.36, 1) both,
+      streamGlow 2.2s ease-in-out infinite;
+  }
+  .message-list--chat .bubble-msg-pop-user {
+    animation: msgPopUser 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .message-list--chat .bubble-msg-pop-hani {
+    animation: msgPopHani 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes cardRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes barSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bubbleInUser {
+  from {
+    opacity: 0;
+    transform: translate(14px, 10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes bubbleInHani {
+  from {
+    opacity: 0;
+    transform: translate(-14px, 10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes streamGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.5) inset,
+      0 2px 8px oklch(0.4 0.04 350 / 0.06);
+  }
+  50% {
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.55) inset,
+      0 6px 22px oklch(0.62 0.2 12 / 0.2),
+      0 0 28px oklch(0.75 0.12 350 / 0.14);
+  }
+}
+@keyframes msgPopUser {
+  from {
+    opacity: 0;
+    transform: translate(12px, 10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes msgPopHani {
+  from {
+    opacity: 0;
+    transform: translate(-10px, 10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
