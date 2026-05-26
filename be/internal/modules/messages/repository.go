@@ -2,10 +2,8 @@ package messages
 
 import (
 	"errors"
-
 	"be/internal/db"
 	"be/internal/modules/sessions"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
