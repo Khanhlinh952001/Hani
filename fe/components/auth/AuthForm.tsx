@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GENDER_OPTIONS, type UserGender } from "@/lib/auth/gender";
 import { cn } from "@/lib/utils";
 
 type Mode = "login" | "register";
@@ -18,6 +19,7 @@ export function AuthForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [gender, setGender] = useState<UserGender | "">("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,7 +31,11 @@ export function AuthForm() {
       if (mode === "login") {
         await login(email, password);
       } else {
-        await register(name, email, password);
+        if (!gender) {
+          setError("Chọn giới tính của bạn");
+          return;
+        }
+        await register(name, email, password, gender);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
@@ -42,7 +48,7 @@ export function AuthForm() {
     <div className="hani-auth-wrap">
       <Card className="hani-auth-card relative gap-0 pt-1">
         <div className="hani-auth-header">
-          <HaniMark size="lg" className="hani-avatar-glow" />
+          <HaniMark size="lg" />
           <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
             Hani
           </h1>
@@ -68,7 +74,10 @@ export function AuthForm() {
                     ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
                     : "bg-transparent text-muted-foreground hover:bg-background/90 hover:text-foreground"
                 )}
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  setMode(m);
+                  setError(null);
+                }}
               >
                 {m === "login" ? "Đăng nhập" : "Đăng ký"}
               </Button>
@@ -77,17 +86,49 @@ export function AuthForm() {
 
           <form className="space-y-3.5" onSubmit={onSubmit}>
             {mode === "register" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Anh muốn em gọi anh là gì?</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Minh, 오빠…"
-                  required
-                  minLength={2}
-                />
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Anh muốn em gọi anh là gì?</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Minh, 오빠…"
+                    required
+                    minLength={2}
+                  />
+                </div>
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium leading-none">
+                    Giới tính của bạn
+                  </legend>
+                  <p className="text-xs text-muted-foreground">
+                    Hani sẽ xưng hô phù hợp hơn khi trò chuyện
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {GENDER_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setGender(opt.id)}
+                        className={cn(
+                          "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2.5 text-center transition-all",
+                          gender === opt.id
+                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                            : "border-border bg-card/80 text-muted-foreground hover:border-primary/30"
+                        )}
+                      >
+                        <span className="text-sm font-semibold">
+                          {opt.label}
+                        </span>
+                        <span className="text-[0.625rem] leading-tight opacity-80">
+                          {opt.desc}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              </>
             )}
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>

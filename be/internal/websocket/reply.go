@@ -44,6 +44,7 @@ func (s *RealtimeSession) buildReplyInput(
 
 	in := ai.ReplyInput{
 		UserName:          s.userName,
+		UserGender:        s.userGender,
 		RelationshipStage: s.relationship,
 		EmotionState:      s.emotion,
 		Mood:              mood,
@@ -93,6 +94,7 @@ func (s *RealtimeSession) sendOpening(ctx context.Context) error {
 	_, err := s.streamAssistantTurn(aiCtx, func(onDelta func(string) error) (ai.BilingualReply, error) {
 		return ai.StreamOpening(aiCtx, ai.OpeningInput{
 			UserName:          s.userName,
+			UserGender:        s.userGender,
 			RelationshipStage: s.relationship,
 			EmotionState:      openingEmotion,
 			Mood:              mood,
@@ -133,6 +135,7 @@ func (s *RealtimeSession) sendProactiveReachOut(
 	_, err := s.streamAssistantTurn(aiCtx, func(onDelta func(string) error) (ai.BilingualReply, error) {
 		return ai.StreamResume(aiCtx, ai.ResumeInput{
 			UserName:          s.userName,
+			UserGender:        s.userGender,
 			RelationshipStage: s.relationship,
 			EmotionState:      turnIn.EmotionState,
 			Mood:              turnIn.Mood,
@@ -170,6 +173,7 @@ func (s *RealtimeSession) sendResume(ctx context.Context, recent []conversation.
 	_, err := s.streamAssistantTurn(aiCtx, func(onDelta func(string) error) (ai.BilingualReply, error) {
 		return ai.StreamResume(aiCtx, ai.ResumeInput{
 			UserName:          s.userName,
+			UserGender:        s.userGender,
 			RelationshipStage: s.relationship,
 			EmotionState:      turnIn.EmotionState,
 			Mood:              turnIn.Mood,

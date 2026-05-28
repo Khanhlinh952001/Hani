@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { AvatarPreview } from "./AvatarPreview";
 
 export const HANI_AVATAR_SRC = "/avatar.jpg";
 
@@ -9,6 +10,8 @@ type Props = {
   size?: "sm" | "md" | "lg" | "xl";
   pulse?: boolean;
   className?: string;
+  /** Tap to view full avatar (default: true when not wrapped in a link). */
+  previewable?: boolean;
 };
 
 const sizeClass = {
@@ -18,14 +21,23 @@ const sizeClass = {
   xl: "size-20",
 } as const;
 
-export function HaniMark({ href, size = "md", pulse, className }: Props) {
+export function HaniMark({
+  href,
+  size = "md",
+  pulse,
+  className,
+  previewable,
+}: Props) {
+  const canPreview = previewable ?? !href;
+
   const avatar = (
     <Avatar
       className={cn(
         sizeClass[size],
-        "hani-avatar-glow ring-2 ring-primary/25",
-        pulse && "animate-pulse ring-primary/50",
-        className
+        "hani-avatar-shell hani-avatar-ring",
+        pulse && "hani-avatar-pulse",
+        canPreview && "pointer-events-none",
+        !canPreview ? className : undefined
       )}
     >
       <AvatarImage src={HANI_AVATAR_SRC} alt="Hani" />
@@ -35,6 +47,15 @@ export function HaniMark({ href, size = "md", pulse, className }: Props) {
     </Avatar>
   );
 
+  const wrapped =
+    canPreview ? (
+      <AvatarPreview src={HANI_AVATAR_SRC} alt="Hani" className={className}>
+        {avatar}
+      </AvatarPreview>
+    ) : (
+      <div className={cn("shrink-0", className)}>{avatar}</div>
+    );
+
   if (href) {
     return (
       <Link
@@ -42,9 +63,10 @@ export function HaniMark({ href, size = "md", pulse, className }: Props) {
         className="shrink-0 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
         aria-label="Trang chủ"
       >
-        {avatar}
+        {wrapped}
       </Link>
     );
   }
-  return avatar;
+
+  return wrapped;
 }

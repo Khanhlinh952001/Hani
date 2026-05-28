@@ -11,6 +11,7 @@ import (
 
 type ResumeInput struct {
 	UserName          string
+	UserGender        string
 	RelationshipStage RelationshipStage
 	EmotionState      EmotionalState
 	Mood              Mood
@@ -43,6 +44,7 @@ func StreamResume(
 
 	turnIn := ReplyInput{
 		UserName:          in.UserName,
+		UserGender:        in.UserGender,
 		RelationshipStage: in.RelationshipStage,
 		EmotionState:      in.EmotionState,
 		Mood:              in.Mood,

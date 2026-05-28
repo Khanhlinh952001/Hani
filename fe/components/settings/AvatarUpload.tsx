@@ -91,7 +91,8 @@ export function AvatarUpload({ onSuccess, onError }: Props) {
           key={cacheBust}
           user={displayUser}
           size="lg"
-          className="size-24 ring-4 ring-primary/20"
+          className="size-24"
+          previewable={false}
         />
         <span
           className={cn(

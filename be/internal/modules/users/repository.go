@@ -72,6 +72,7 @@ func repoUpdateUser(id int, data *User) error {
 		"provider":     data.Provider,
 		"provider_id":  data.ProviderId,
 		"avatar":       data.Avatar,
+		"gender":       data.Gender,
 		"level":        data.Level,
 		"address":      data.Address,
 		"status":       data.Status,

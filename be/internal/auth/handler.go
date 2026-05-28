@@ -13,6 +13,7 @@ type registerRequest struct {
 	Name     string `json:"name" binding:"required,min=2"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
+	Gender   string `json:"gender" binding:"required"`
 }
 
 type loginRequest struct {
@@ -32,9 +33,15 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
+	if !users.ValidGender(req.Gender) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "gender must be male, female, or other"})
+		return
+	}
+
 	user := &users.User{
 		Name:     req.Name,
 		Email:    req.Email,
+		Gender:   req.Gender,
 		Provider: "local",
 	}
 	if err := users.CreateUserService(user, req.Password); err != nil {

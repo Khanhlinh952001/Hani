@@ -1,4 +1,5 @@
 import { API_URL } from "../config";
+import type { UserGender } from "./gender";
 import type { AuthResponse, AuthUser } from "./types";
 import { getToken } from "./storage";
 
@@ -10,12 +11,13 @@ async function parseError(res: Response): Promise<string> {
 export async function register(
   name: string,
   email: string,
-  password: string
+  password: string,
+  gender: UserGender
 ): Promise<AuthResponse> {
   const res = await fetch(`${API_URL}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, gender }),
   });
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();

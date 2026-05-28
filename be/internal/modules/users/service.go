@@ -88,6 +88,9 @@ func UpdateUserService(id string, data *User, password string) error {
 	if data.Avatar != "" {
 		existing.Avatar = data.Avatar
 	}
+	if data.Gender != "" {
+		existing.Gender = data.Gender
+	}
 	if data.Level != 0 {
 		existing.Level = data.Level
 	}

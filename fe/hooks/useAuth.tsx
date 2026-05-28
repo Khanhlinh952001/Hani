@@ -21,6 +21,7 @@ import {
   getToken,
   setAuth,
 } from "@/lib/auth/storage";
+import type { UserGender } from "@/lib/auth/gender";
 import { isAdmin, type AuthUser } from "@/lib/auth/types";
 
 type AuthContextValue = {
@@ -29,7 +30,12 @@ type AuthContextValue = {
   loading: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    gender: UserGender
+  ) => Promise<void>;
   logout: () => void;
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
@@ -72,8 +78,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (name: string, email: string, password: string) => {
-      const res = await apiRegister(name, email, password);
+    async (
+      name: string,
+      email: string,
+      password: string,
+      gender: UserGender
+    ) => {
+      const res = await apiRegister(name, email, password, gender);
       setAuth(res.token, res.user);
       setToken(res.token);
       setUser(res.user);

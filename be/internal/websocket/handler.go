@@ -3,11 +3,13 @@ package websocket
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"be/internal/auth"
 	"be/internal/config"
 	"be/internal/modules/sessions"
+	"be/internal/modules/users"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +22,11 @@ func HandleChat(c *gin.Context) {
 		return
 	}
 	userID := claims.UserID
+
+	userGender := ""
+	if u, err := users.GetUserByIDService(strconv.Itoa(userID)); err == nil {
+		userGender = u.Gender
+	}
 
 	sess, err := sessions.GetOrCreateUserSession(userID)
 	if err != nil {
@@ -43,6 +50,7 @@ func HandleChat(c *gin.Context) {
 	rs := NewRealtimeSession(
 		userID,
 		claims.Name,
+		userGender,
 		sessionID,
 		conn,
 		DefaultHub,

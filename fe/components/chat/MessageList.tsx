@@ -64,7 +64,7 @@ export function MessageList({
         status !== "thinking" &&
         status !== "speaking" && (
           <div className="hani-empty">
-            <HaniMark size="xl" className="hani-avatar-glow" pulse />
+            <HaniMark size="xl" pulse />
             <BilingualText
               className="max-w-[16rem]"
               ko={

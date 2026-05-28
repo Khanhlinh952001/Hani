@@ -1,36 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { API_URL } from "@/lib/config";
+import { resolveAvatarSrc } from "@/lib/avatar/resolve-src";
 import type { AuthUser } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
-
-function resolveAvatarSrc(
-  avatar?: string,
-  cacheBust?: string
-): string | undefined {
-  const raw = avatar?.trim();
-  if (!raw) return undefined;
-
-  let url: string;
-  if (
-    raw.startsWith("http://") ||
-    raw.startsWith("https://") ||
-    raw.startsWith("blob:")
-  ) {
-    url = raw;
-  } else if (raw.startsWith("/uploads/")) {
-    url = `${API_URL}${raw}`;
-  } else if (raw.startsWith("/")) {
-    url = raw;
-  } else {
-    url = raw;
-  }
-
-  if (cacheBust && url.includes("/uploads/")) {
-    const sep = url.includes("?") ? "&" : "?";
-    return `${url}${sep}v=${encodeURIComponent(cacheBust)}`;
-  }
-  return url;
-}
+import { AvatarPreview } from "./AvatarPreview";
 
 type Props = {
   user: AuthUser | null | undefined;
@@ -38,6 +10,8 @@ type Props = {
   className?: string;
   /** Bust cache for uploaded avatars (e.g. updated_at or increment after upload). */
   cacheBust?: string;
+  /** Tap to open full image (default: true when user has an avatar). */
+  previewable?: boolean;
 };
 
 const sizeClass = {
@@ -58,17 +32,20 @@ export function UserAvatar({
   size = "md",
   className,
   cacheBust,
+  previewable = true,
 }: Props) {
   const name = user?.name?.trim() || "나";
   const bust = cacheBust ?? user?.updated_at;
   const src = resolveAvatarSrc(user?.avatar, bust);
 
-  return (
+  const avatar = (
     <Avatar
       className={cn(
         sizeClass[size],
-        "ring-2 ring-background shadow-sm",
-        className
+        "hani-avatar-shell",
+        src ? "hani-avatar-ring-user" : "ring-2 ring-primary/15",
+        previewable && src ? "pointer-events-none" : undefined,
+        !previewable || !src ? className : undefined
       )}
     >
       {src ? <AvatarImage src={src} alt={name} /> : null}
@@ -76,5 +53,15 @@ export function UserAvatar({
         {initials(name)}
       </AvatarFallback>
     </Avatar>
+  );
+
+  if (!previewable || !src) {
+    return <div className={cn("shrink-0", className)}>{avatar}</div>;
+  }
+
+  return (
+    <AvatarPreview src={src} alt={name} className={className}>
+      {avatar}
+    </AvatarPreview>
   );
 }

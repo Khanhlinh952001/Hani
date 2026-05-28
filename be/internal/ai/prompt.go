@@ -10,6 +10,7 @@ import (
 // ReplyInput is everything needed for one Hani reply turn.
 type ReplyInput struct {
 	UserName          string
+	UserGender        string // male | female | other
 	RelationshipStage RelationshipStage
 	EmotionState      EmotionalState
 	Mood              Mood
@@ -48,6 +49,11 @@ func BuildTurnContext(in ReplyInput) string {
 		b.WriteString("Partner name: ")
 		b.WriteString(name)
 		b.WriteString("\n")
+	}
+
+	if block := GenderPromptBlock(in.UserGender); block != "" {
+		b.WriteString("\n")
+		b.WriteString(block)
 	}
 
 	b.WriteString("\n")

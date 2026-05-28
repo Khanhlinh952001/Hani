@@ -8,10 +8,11 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-// MemoryFact is one storable line for long-term recall.
+// MemoryFact is one storable line for long-term recall (Korean + optional Vietnamese gloss).
 type MemoryFact struct {
-	Content string
-	Type    string // life | emotional
+	Content       string
+	TranslationVi string
+	Type          string // life | emotional
 }
 
 // ExtractMemoryFacts returns factual and emotional memories worth saving, or nil.
@@ -26,22 +27,28 @@ func ExtractMemoryFacts(ctx context.Context, userMsg, assistantMsg string) ([]Me
 		return nil, fmt.Errorf("OPENAI_API_KEY is not set")
 	}
 
-	prompt := fmt.Sprintf(`From this chat exchange, extract up to TWO short memories worth keeping.
+	prompt := fmt.Sprintf(`From this chat exchange, extract up to TWO short memories worth keeping for a Korean AI companion app used by Vietnamese learners.
 
 Types:
 - life: job, hobby, plan, preference, daily detail about the user
-- emotional: how they made each other feel, comfort, missing each other, staying up late talking, user disappearing, jealousy, warmth
+- emotional: how they made each other feel, comfort, missing each other, staying up late talking, warmth
 
 If nothing worth saving, output exactly: NONE
 
 User: %s
 Hani: %s
 
-Output format (one per line, max 2 lines):
-life|one short fact
-emotional|one short emotional moment
+Output format (one per line, max 2 lines). Each line has THREE parts separated by |:
+type|Korean sentence|Vietnamese gloss
 
-Use English or Korean. No quotes.`, userMsg, strings.TrimSpace(assistantMsg))
+Example:
+life|주말에 밀크티 마시는 걸 좋아함|Thích uống trà sữa cuối tuần
+emotional|밤늦게까지 같이 이야기해서 따뜻했음|Đêm qua nói chuyện khuya cùng nhau, ấm áp
+
+Rules:
+- Part 2 MUST be natural Korean (한국어), short (under 40 chars).
+- Part 3 MUST be natural Vietnamese for the learner.
+- Do NOT use English. No quotes.`, userMsg, strings.TrimSpace(assistantMsg))
 
 	client := openai.NewClient(key)
 	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
@@ -65,20 +72,23 @@ Use English or Korean. No quotes.`, userMsg, strings.TrimSpace(assistantMsg))
 		if line == "" || strings.EqualFold(line, "NONE") {
 			continue
 		}
-		typ, content, ok := strings.Cut(line, "|")
-		if !ok {
-			out = append(out, MemoryFact{Content: line, Type: "life"})
+		parts := strings.Split(line, "|")
+		if len(parts) < 2 {
 			continue
 		}
-		typ = strings.TrimSpace(typ)
-		content = strings.TrimSpace(content)
+		typ := strings.TrimSpace(parts[0])
+		content := strings.TrimSpace(parts[1])
+		vi := ""
+		if len(parts) >= 3 {
+			vi = strings.TrimSpace(parts[2])
+		}
 		if content == "" {
 			continue
 		}
 		if typ != "emotional" {
 			typ = "life"
 		}
-		out = append(out, MemoryFact{Content: content, Type: typ})
+		out = append(out, MemoryFact{Content: content, TranslationVi: vi, Type: typ})
 	}
 	return out, nil
 }

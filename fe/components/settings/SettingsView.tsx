@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import { ArrowLeft, Trash2, Volume2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
-import { AppShell } from "@/components/layout/AppShell";
+import { CompanionLayout } from "@/components/layout/CompanionLayout";
 import { HaniMark } from "@/components/brand/HaniMark";
 import { AvatarUpload } from "@/components/settings/AvatarUpload";
 import {
@@ -80,7 +80,7 @@ export function SettingsView() {
   }, []);
 
   return (
-    <AppShell>
+    <CompanionLayout>
       <header className="hani-header flex items-center gap-3 px-4 py-3">
         <Button variant="ghost" size="icon-sm" asChild>
           <Link href="/" aria-label="Về trang chủ">
@@ -259,6 +259,6 @@ export function SettingsView() {
           Đăng xuất
         </Button>
       </main>
-    </AppShell>
+    </CompanionLayout>
   );
 }

@@ -35,9 +35,10 @@ var upgrader = gorillaws.Upgrader{
 // RealtimeSession handles one websocket connection.
 type RealtimeSession struct {
 	connID    string
-	userID    int
-	userName  string
-	sessionID uuid.UUID
+	userID     int
+	userName   string
+	userGender string
+	sessionID  uuid.UUID
 
 	conn      *Conn
 	hub       *Hub
@@ -80,14 +81,16 @@ func (s *RealtimeSession) Run(ctx context.Context) {
 	s.mood = ai.DeriveMood(s.emotion, s.life, hoursSince)
 
 	if err := s.sendReadyWithHistory(recent); err != nil {
-		log.Printf("[ws %s] ready: %v", s.connID, err)
+		if !errors.Is(err, errConnClosed) {
+			log.Printf("[ws %s] ready: %v", s.connID, err)
+		}
 		return
 	}
 	s.readySent = true
 
 	go func() {
 		if len(recent) == 0 {
-			if err := s.sendOpening(ctx); err != nil {
+			if err := s.sendOpening(ctx); err != nil && !errors.Is(err, errConnClosed) {
 				log.Printf("[ws %s] opening: %v", s.connID, err)
 				_ = s.write(ServerMessage{Type: EventError, Message: err.Error()})
 			}
@@ -103,11 +106,15 @@ func (s *RealtimeSession) Run(ctx context.Context) {
 
 	for {
 		if err := s.runOneTurn(ctx); err != nil {
-			if errors.Is(err, errSessionEnded) || ctx.Err() != nil {
+			if errors.Is(err, errSessionEnded) ||
+				errors.Is(err, errConnClosed) ||
+				ctx.Err() != nil {
 				return
 			}
 			log.Printf("[ws %s] turn: %v", s.connID, err)
-			_ = s.write(ServerMessage{Type: EventError, Message: err.Error()})
+			if werr := s.write(ServerMessage{Type: EventError, Message: err.Error()}); werr != nil && !errors.Is(werr, errConnClosed) {
+				log.Printf("[ws %s] error reply: %v", s.connID, werr)
+			}
 			return
 		}
 	}
@@ -128,7 +135,7 @@ func (s *RealtimeSession) runOneTurn(ctx context.Context) error {
 	for {
 		msgType, data, err := s.conn.ReadMessage()
 		if err != nil {
-			return nil
+			return err
 		}
 
 		switch msgType {
@@ -253,7 +260,7 @@ func emptyInputHint(voiceEnabled bool) string {
 
 func NewRealtimeSession(
 	userID int,
-	userName string,
+	userName, userGender string,
 	sessionID uuid.UUID,
 	conn *Conn,
 	hub *Hub,
@@ -265,6 +272,7 @@ func NewRealtimeSession(
 		connID:         newConnID(),
 		userID:         userID,
 		userName:       userName,
+		userGender:     userGender,
 		sessionID:      sessionID,
 		conn:           conn,
 		hub:            hub,

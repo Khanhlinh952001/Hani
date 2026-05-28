@@ -11,6 +11,7 @@ import (
 
 type OpeningInput struct {
 	UserName          string
+	UserGender        string
 	RelationshipStage RelationshipStage
 	EmotionState      EmotionalState
 	Mood              Mood
@@ -41,6 +42,7 @@ func StreamOpening(
 
 	turnIn := ReplyInput{
 		UserName:          in.UserName,
+		UserGender:        in.UserGender,
 		RelationshipStage: in.RelationshipStage,
 		EmotionState:      in.EmotionState,
 		Mood:              in.Mood,

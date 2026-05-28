@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"be/internal/ai"
@@ -32,6 +33,12 @@ func SaveFromExchange(userID int, userMsg, assistantMsg string) {
 			if fact.Content == "" {
 				continue
 			}
+			vi := strings.TrimSpace(fact.TranslationVi)
+			if vi == "" {
+				if t, err := ai.TranslateToVietnamese(ctx, fact.Content); err == nil {
+					vi = t
+				}
+			}
 			embedding, err := ai.EmbedText(ctx, fact.Content)
 			if err != nil {
 				log.Printf("[memory] embed: %v", err)
@@ -44,6 +51,7 @@ func SaveFromExchange(userID int, userMsg, assistantMsg string) {
 			m := &memmod.Memory{
 				UserID:          userID,
 				Content:         fact.Content,
+				TranslationVi:   vi,
 				MemoryType:      fact.Type,
 				ImportanceScore: importance,
 				Embedding:       ptr(pgvector.NewVector(embedding)),

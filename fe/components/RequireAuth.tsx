@@ -10,7 +10,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-3">
-        <HaniMark size="lg" pulse className="hani-avatar-glow" />
+        <HaniMark size="lg" pulse />
         <p className="text-sm text-muted-foreground">Đang tải…</p>
       </div>
     );

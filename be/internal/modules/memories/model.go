@@ -12,6 +12,7 @@ type Memory struct {
 	ID              uuid.UUID        `json:"id" gorm:"type:uuid;primaryKey"`
 	UserID          int              `json:"user_id" gorm:"not null;index"`
 	Content         string           `json:"content" gorm:"not null;type:text"`
+	TranslationVi   string           `json:"translation_vi,omitempty" gorm:"type:text"`
 	MemoryType      string           `json:"memory_type"`
 	ImportanceScore int              `json:"importance_score" gorm:"default:1"`
 	Embedding       *pgvector.Vector `json:"embedding,omitempty" gorm:"type:vector(1536)"`

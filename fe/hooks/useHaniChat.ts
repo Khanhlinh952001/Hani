@@ -14,6 +14,7 @@ import {
   ServerMessage,
 } from "@/lib/ws/events";
 import type { PracticeMode } from "@/lib/practice/mode";
+import { addVoiceMinutes, saveLastPreview } from "@/lib/home/companion";
 import { clearConversationHistory } from "@/lib/sessions/api";
 import { HaniWsClient } from "@/lib/ws/hani-client";
 
@@ -84,6 +85,10 @@ export function useHaniChat(practiceMode: PracticeMode) {
         ]);
       }
       assistantIdRef.current = null;
+      saveLastPreview(text);
+      if (voiceEnabledRef.current) {
+        addVoiceMinutes(1);
+      }
     },
     []
   );

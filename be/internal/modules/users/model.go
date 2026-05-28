@@ -11,6 +11,7 @@ type User struct {
 	Provider    string    `json:"provider"`
 	ProviderId  string    `json:"provider_id"`
 	Avatar      string    `json:"avatar"`
+	Gender      string    `json:"gender"` // male | female | other
 	Level       int       `json:"level"` // topik 1 2 3 4 5 6
 	Address     string    `json:"address"`
 	Status      int       `json:"status"`

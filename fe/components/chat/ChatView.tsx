@@ -3,7 +3,7 @@
 import type { PracticeMode } from "@/lib/practice/mode";
 import { useHaniChat } from "@/hooks/useHaniChat";
 import { useSettings } from "@/hooks/useSettings";
-import { AppShell } from "@/components/layout/AppShell";
+import { CompanionLayout } from "@/components/layout/CompanionLayout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConnectionBar } from "./ConnectionBar";
@@ -43,10 +43,7 @@ export function ChatView({ practiceMode }: Props) {
   );
 
   return (
-    <AppShell
-      footer={footer}
-      className="flex flex-col"
-    >
+    <CompanionLayout hideNav footer={footer} className="flex flex-col">
       <ConnectionBar
         practiceMode={practiceMode}
         status={chat.status}
@@ -76,6 +73,6 @@ export function ChatView({ practiceMode }: Props) {
           />
         </ScrollArea>
       </div>
-    </AppShell>
+    </CompanionLayout>
   );
 }

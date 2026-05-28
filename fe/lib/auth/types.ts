@@ -1,7 +1,10 @@
+import type { UserGender } from "./gender";
+
 export type AuthUser = {
   id: number;
   name: string;
   email: string;
+  gender?: UserGender | string;
   avatar?: string;
   level?: number;
   role?: number;
