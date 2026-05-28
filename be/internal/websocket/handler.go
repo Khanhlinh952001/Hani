@@ -8,6 +8,8 @@ import (
 
 	"be/internal/auth"
 	"be/internal/config"
+	"be/internal/modules/characters"
+	"be/internal/modules/lover"
 	"be/internal/modules/sessions"
 	"be/internal/modules/users"
 
@@ -24,8 +26,35 @@ func HandleChat(c *gin.Context) {
 	userID := claims.UserID
 
 	userGender := ""
+	characterID := "hani"
+	characterName := "Hani"
+	personalityPrompt := ""
+	defaultVoice := ""
+	defaultLang := "ko"
 	if u, err := users.GetUserByIDService(strconv.Itoa(userID)); err == nil {
 		userGender = u.Gender
+		if u.SelectedCharacterID != "" {
+			characterID = u.SelectedCharacterID
+		}
+	}
+	defaultProvider := ""
+	if name, prompt, voice, ok := lover.GetProfilePromptForUser(userID); ok {
+		characterName = name
+		personalityPrompt = prompt
+		defaultVoice = voice.VoiceID
+		if voice.Language != "" {
+			defaultLang = voice.Language
+		}
+		defaultProvider = voice.Provider
+		characterID = "custom"
+	} else if ch, err := characters.GetByIDService(characterID); err == nil {
+		characterName = ch.Name
+		personalityPrompt = ch.PersonalityPrompt
+		defaultVoice = ch.VoiceID
+		if ch.TTSLanguage != "" {
+			defaultLang = ch.TTSLanguage
+		}
+		defaultProvider = ch.VoiceProvider
 	}
 
 	sess, err := sessions.GetOrCreateUserSession(userID)
@@ -45,7 +74,20 @@ func HandleChat(c *gin.Context) {
 	voiceEnabled := c.Query("practice_mode") != "chat"
 	ttsProvider := c.Query("tts_provider")
 	if ttsProvider == "" {
-		ttsProvider = config.GetEnv("TTS_PROVIDER", "openai")
+		ttsProvider = defaultProvider
+	}
+	if ttsProvider == "" {
+		ttsProvider = config.GetEnv("TTS_PROVIDER", "soniox")
+	}
+	// App uses Soniox TTS only (OpenAI is for chat/embeddings).
+	ttsProvider = "soniox"
+	ttsVoice := c.Query("tts_voice")
+	if ttsVoice == "" {
+		ttsVoice = defaultVoice
+	}
+	ttsLanguage := c.Query("tts_language")
+	if ttsLanguage == "" {
+		ttsLanguage = defaultLang
 	}
 	rs := NewRealtimeSession(
 		userID,
@@ -54,9 +96,12 @@ func HandleChat(c *gin.Context) {
 		sessionID,
 		conn,
 		DefaultHub,
+		characterID,
+		characterName,
+		personalityPrompt,
 		ttsProvider,
-		c.Query("tts_voice"),
-		c.Query("tts_language"),
+		ttsVoice,
+		ttsLanguage,
 		showVi,
 		voiceEnabled,
 	)

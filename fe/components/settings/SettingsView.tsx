@@ -8,12 +8,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { CompanionLayout } from "@/components/layout/CompanionLayout";
 import { HaniMark } from "@/components/brand/HaniMark";
 import { AvatarUpload } from "@/components/settings/AvatarUpload";
-import {
-  SONIOX_VOICE_OPTIONS,
-  TTS_LANGUAGE_OPTIONS,
-  TTS_PROVIDER_OPTIONS,
-  TTS_VOICE_OPTIONS,
-} from "@/lib/settings/types";
+import { SONIOX_VOICE_OPTIONS, TTS_LANGUAGE_OPTIONS } from "@/lib/settings/types";
 import { clearConversationHistory } from "@/lib/sessions/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -43,8 +38,6 @@ export function SettingsView() {
   const {
     showVietnamese,
     setShowVietnamese,
-    ttsProvider,
-    setTtsProvider,
     ttsVoice,
     setTtsVoice,
     ttsLanguage,
@@ -54,8 +47,7 @@ export function SettingsView() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isSoniox = ttsProvider === "soniox";
-  const voiceOptions = isSoniox ? SONIOX_VOICE_OPTIONS : TTS_VOICE_OPTIONS;
+  const voiceOptions = SONIOX_VOICE_OPTIONS;
 
   const handleClearHistory = useCallback(async () => {
     if (
@@ -160,33 +152,16 @@ export function SettingsView() {
           <CardHeader>
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-base">Giọng Hani (TTS)</CardTitle>
-              <Badge variant={isSoniox ? "secondary" : "default"}>
-                {isSoniox ? "Soniox" : "OpenAI"}
-              </Badge>
+              <Badge variant="secondary">Soniox</Badge>
             </div>
             <CardDescription>
               Nhận dạng giọng nói dùng Soniox STT (khóa tạm từ server, nhấn giữ để nói).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tts-provider">Nhà cung cấp giọng</Label>
-              <Select
-                value={ttsProvider}
-                onValueChange={(v) => setTtsProvider(v as typeof ttsProvider)}
-              >
-                <SelectTrigger id="tts-provider" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TTS_PROVIDER_OPTIONS.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.label} — {p.desc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Giọng đọc qua <strong>Soniox TTS</strong> (cần SONIOX_API_KEY trên server).
+            </p>
 
             <div className="space-y-2">
               <Label htmlFor="tts-voice">Giọng đọc</Label>
@@ -204,9 +179,8 @@ export function SettingsView() {
               </Select>
             </div>
 
-            {isSoniox ? (
-              <div className="space-y-2">
-                <Label htmlFor="tts-lang">Ngôn ngữ đọc (Soniox)</Label>
+            <div className="space-y-2">
+                <Label htmlFor="tts-lang">Ngôn ngữ đọc</Label>
                 <Select
                   value={ttsLanguage}
                   onValueChange={(v) =>
@@ -225,11 +199,6 @@ export function SettingsView() {
                   </SelectContent>
                 </Select>
               </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                OpenAI TTS tự nhận tiếng Hàn từ nội dung câu.
-              </p>
-            )}
           </CardContent>
         </Card>
 

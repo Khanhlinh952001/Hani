@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ff5c8a" />
+    <title>Hani — Offline</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 2rem;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #fff7fa;
+        color: #2b1d26;
+        text-align: center;
+      }
+      img {
+        width: 5rem;
+        height: 5rem;
+        border-radius: 1.25rem;
+        box-shadow: 0 8px 24px rgb(255 92 138 / 0.25);
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0;
+      }
+      p {
+        margin: 0;
+        color: #8b6b7a;
+        font-size: 0.9rem;
+        max-width: 18rem;
+        line-height: 1.5;
+      }
+      button {
+        margin-top: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(145deg, #ff7aa3, #ff5c8a);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/logo/android-chrome-192x192.png" alt="Hani" width="80" height="80" />
+    <h1>Mất kết nối rồi</h1>
+    <p>Kiểm tra mạng rồi thử lại — Hani vẫn đợi bạn 💕</p>
+    <button type="button" onclick="location.reload()">Thử lại</button>
+  </body>
+</html>

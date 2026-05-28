@@ -24,6 +24,7 @@ type ResumeInput struct {
 	HoursSinceUser    float64
 	IncludeVietnamese bool
 	ProactiveKind     ProactiveKind
+	PersonalityPrompt string
 }
 
 // StreamResume greets someone returning to an ongoing chat (references last thread).
@@ -58,6 +59,7 @@ func StreamResume(
 		HoursSinceUser:    in.HoursSinceUser,
 		IncludeVietnamese: in.IncludeVietnamese,
 		ProactiveKind:     in.ProactiveKind,
+		PersonalityPrompt: in.PersonalityPrompt,
 	}
 	if turnIn.InnerThought == "" {
 		turnIn.InnerThought = GenerateInnerThought(turnIn)

@@ -5,6 +5,7 @@ import type { PracticeMode } from "@/lib/practice/mode";
 import type { AuthUser } from "@/lib/auth/types";
 import { ChatMessage } from "@/lib/ws/events";
 import { HaniMark } from "@/components/brand/HaniMark";
+import { useCompanionProfile } from "@/hooks/useCompanionProfile";
 import { UserAvatar } from "@/components/brand/UserAvatar";
 import { BilingualText } from "./BilingualText";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ export function MessageList({
   showVietnamese,
   practiceMode,
 }: Props) {
+  const { avatarUrl, displayName } = useCompanionProfile();
   const isSpeakMode = practiceMode === "speak";
   const isListeningLive =
     isSpeakMode && (holding || status === "listening");
@@ -64,7 +66,7 @@ export function MessageList({
         status !== "thinking" &&
         status !== "speaking" && (
           <div className="hani-empty">
-            <HaniMark size="xl" pulse />
+            <HaniMark size="xl" pulse src={avatarUrl} alt={displayName} />
             <BilingualText
               className="max-w-[16rem]"
               ko={
@@ -115,7 +117,12 @@ export function MessageList({
             {isUser ? (
               <UserAvatar user={user} size="sm" className="mb-0.5 shrink-0" />
             ) : (
-              <HaniMark size="sm" className="mb-0.5 shrink-0" />
+              <HaniMark
+                size="sm"
+                className="mb-0.5 shrink-0"
+                src={avatarUrl}
+                alt={displayName}
+              />
             )}
             <article
               className={cn(
@@ -158,7 +165,13 @@ export function MessageList({
         !awaitingAssistant &&
         !visibleMessages.some((m) => m.streaming) && (
           <div className="flex items-end gap-2">
-            <HaniMark size="sm" pulse className="mb-0.5 shrink-0" />
+            <HaniMark
+              size="sm"
+              pulse
+              className="mb-0.5 shrink-0"
+              src={avatarUrl}
+              alt={displayName}
+            />
             <article className="bubble bubble-hani bubble-thinking bubble-enter-hani">
               <Badge variant="outline" className="mb-1.5 h-5 px-1.5 text-[10px]">
                 하니

@@ -21,6 +21,7 @@ type OpeningInput struct {
 	EmotionalMemories []string
 	TimeContext       string
 	IncludeVietnamese bool
+	PersonalityPrompt string
 }
 
 // StreamOpening generates Hani's proactive greeting when user opens chat.
@@ -52,13 +53,14 @@ func StreamOpening(
 		EmotionalMemories: in.EmotionalMemories,
 		TimeContext:       in.TimeContext,
 		IncludeVietnamese: in.IncludeVietnamese,
+		PersonalityPrompt: in.PersonalityPrompt,
 	}
 	if turnIn.InnerThought == "" {
 		turnIn.InnerThought = GenerateInnerThought(turnIn)
 	}
 
 	messages := []openai.ChatCompletionMessage{
-		{Role: openai.ChatMessageRoleSystem, Content: BuildSystemContent(in.RelationshipStage) + "\n\n" + BuildTurnContext(turnIn)},
+		{Role: openai.ChatMessageRoleSystem, Content: BuildSystemContent(in.RelationshipStage, in.PersonalityPrompt) + "\n\n" + BuildTurnContext(turnIn)},
 		{Role: openai.ChatMessageRoleUser, Content: prompt.String()},
 	}
 	if in.IncludeVietnamese {

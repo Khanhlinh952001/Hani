@@ -5,6 +5,8 @@ export type AuthUser = {
   name: string;
   email: string;
   gender?: UserGender | string;
+  ai_profile_id?: string;
+  selected_character_id?: string;
   avatar?: string;
   level?: number;
   role?: number;

@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { HANI_BRAND_LOGO } from "@/lib/brand/assets";
 import { cn } from "@/lib/utils";
 import { AvatarPreview } from "./AvatarPreview";
 
-export const HANI_AVATAR_SRC = "/avatar.jpg";
-
 type Props = {
   href?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
   pulse?: boolean;
   className?: string;
-  /** Tap to view full avatar (default: true when not wrapped in a link). */
+  /** Companion portrait URL; omit for app brand logo from /logo/. */
+  src?: string;
+  alt?: string;
+  /** Tap to view full image (default: true when not wrapped in a link). */
   previewable?: boolean;
 };
 
@@ -19,6 +21,7 @@ const sizeClass = {
   md: "size-10",
   lg: "size-14",
   xl: "size-20",
+  "2xl": "size-24",
 } as const;
 
 export function HaniMark({
@@ -26,11 +29,33 @@ export function HaniMark({
   size = "md",
   pulse,
   className,
+  src,
+  alt = "Hani",
   previewable,
 }: Props) {
+  const imageSrc = src?.trim() || HANI_BRAND_LOGO;
+  const isBrand = !src?.trim();
   const canPreview = previewable ?? !href;
 
-  const avatar = (
+  const avatar = isBrand ? (
+    <div
+      className={cn(
+        "hani-brand-mark-shell shrink-0 overflow-hidden rounded-2xl",
+        sizeClass[size],
+        pulse && "hani-avatar-pulse",
+        canPreview && "pointer-events-none",
+        !canPreview ? className : undefined
+      )}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageSrc}
+        alt={alt}
+        className="size-full object-contain"
+        draggable={false}
+      />
+    </div>
+  ) : (
     <Avatar
       className={cn(
         sizeClass[size],
@@ -40,21 +65,20 @@ export function HaniMark({
         !canPreview ? className : undefined
       )}
     >
-      <AvatarImage src={HANI_AVATAR_SRC} alt="Hani" />
+      <AvatarImage src={imageSrc} alt={alt} className="object-cover" />
       <AvatarFallback className="bg-primary font-display text-sm font-bold text-primary-foreground">
-        하
+        H
       </AvatarFallback>
     </Avatar>
   );
 
-  const wrapped =
-    canPreview ? (
-      <AvatarPreview src={HANI_AVATAR_SRC} alt="Hani" className={className}>
-        {avatar}
-      </AvatarPreview>
-    ) : (
-      <div className={cn("shrink-0", className)}>{avatar}</div>
-    );
+  const wrapped = canPreview ? (
+    <AvatarPreview src={imageSrc} alt={alt} className={className}>
+      {avatar}
+    </AvatarPreview>
+  ) : (
+    <div className={cn("shrink-0", className)}>{avatar}</div>
+  );
 
   if (href) {
     return (

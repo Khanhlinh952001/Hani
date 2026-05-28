@@ -48,7 +48,7 @@ export function AuthForm() {
     <div className="hani-auth-wrap">
       <Card className="hani-auth-card relative gap-0 pt-1">
         <div className="hani-auth-header">
-          <HaniMark size="lg" />
+          <HaniMark size="2xl" previewable={false} />
           <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
             Hani
           </h1>
@@ -170,7 +170,7 @@ export function AuthForm() {
                 ? "…"
                 : mode === "login"
                   ? "Vào trò chuyện"
-                  : "Tạo tài khoản"}
+                  : "Tiếp tục — chọn Hani"}
             </Button>
           </form>
         </CardContent>

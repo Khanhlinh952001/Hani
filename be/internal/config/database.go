@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"be/internal/db"
+	"be/internal/modules/characters"
+	"be/internal/modules/lover"
 	"be/internal/modules/memories"
 	"be/internal/modules/messages"
 	"be/internal/modules/sessions"
@@ -33,6 +35,8 @@ func ConnectDB() {
 	enableVectorExtension(conn)
 
 	autoMigrate()
+	characters.SeedCharacters()
+	lover.SeedCatalog()
 	seedDemoUser()
 	seedAdminUser()
 
@@ -53,11 +57,12 @@ func seedDemoUser() {
 	}
 
 	demo := users.User{
-		Name:     "Bạn",
-		Email:    "demo@hani.app",
-		Password: string(hash),
-		Status:   1,
-		Level:    3,
+		Name:                "Bạn",
+		Email:               "demo@hani.app",
+		Password:            string(hash),
+		Status:              1,
+		Level:               3,
+		SelectedCharacterID: "hani",
 	}
 	if err := db.DB.Create(&demo).Error; err != nil {
 		log.Println("seed user:", err)
@@ -133,6 +138,12 @@ func buildDSN() string {
 func autoMigrate() {
 	err := db.DB.AutoMigrate(
 		&users.User{},
+		&characters.Character{},
+		&characters.UserCharacterMemory{},
+		&lover.PersonalityTemplate{},
+		&lover.VoiceProfile{},
+		&lover.AIProfile{},
+		&lover.RelationshipStats{},
 		&sessions.Session{},
 		&messages.Message{},
 		&memories.Memory{},

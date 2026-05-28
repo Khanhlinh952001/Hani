@@ -7,6 +7,7 @@ import type { AuthUser } from "@/lib/auth/types";
 import type { PracticeMode } from "@/lib/practice/mode";
 import { HaniMark } from "@/components/brand/HaniMark";
 import { UserAvatar } from "@/components/brand/UserAvatar";
+import { useCompanionProfile } from "@/hooks/useCompanionProfile";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ export function ConnectionBar({
   user,
   isConnected,
 }: Props) {
+  const { avatarUrl, displayName } = useCompanionProfile();
   const pulse =
     practiceMode === "speak" &&
     (status === "speaking" || status === "thinking");
@@ -45,9 +47,17 @@ export function ConnectionBar({
       </Button>
 
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <HaniMark href="/" size="md" pulse={pulse} />
+        <HaniMark
+          href="/"
+          size="md"
+          pulse={pulse}
+          src={avatarUrl}
+          alt={displayName}
+        />
         <div className="min-w-0">
-          <p className="font-display text-base font-bold leading-tight">Hani</p>
+          <p className="font-display text-base font-bold leading-tight">
+            {displayName}
+          </p>
           {user ? (
             <p className="truncate text-xs text-muted-foreground">{user.name}</p>
           ) : null}

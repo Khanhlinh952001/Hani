@@ -3,6 +3,8 @@ package routes
 import (
 	"be/internal/admin"
 	"be/internal/auth"
+	"be/internal/modules/characters"
+	"be/internal/modules/lover"
 	"be/internal/modules/memories"
 	"be/internal/modules/messages"
 	"be/internal/modules/sessions"
@@ -17,7 +19,7 @@ func SetupRoutes(r *gin.Engine) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
-	r.Static("/uploads", "./uploads")
+	r.Static("/uploads", "./uploads") // includes uploads/voices/ cached TTS previews
 
 	api := r.Group("/api")
 
@@ -27,6 +29,8 @@ func SetupRoutes(r *gin.Engine) {
 	// Protected
 	protected := api.Group("")
 	protected.Use(auth.RequireAuth())
+	characters.SetupRoutes(protected)
+	lover.SetupRoutes(protected)
 	sessions.SetupRoutes(protected)
 	messages.SetupRoutes(protected)
 	memories.SetupRoutes(protected)

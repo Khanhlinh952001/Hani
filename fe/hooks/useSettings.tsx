@@ -10,6 +10,7 @@ import {
 } from "react";
 import { loadSettings, saveSettings } from "@/lib/settings/storage";
 import type { AppSettings, TtsLanguage, TtsProvider } from "@/lib/settings/types";
+import { SONIOX_VOICE_OPTIONS } from "@/lib/settings/types";
 
 type SettingsContextValue = AppSettings & {
   setShowVietnamese: (value: boolean) => void;
@@ -43,24 +44,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [update]
   );
 
-  const setTtsProvider = useCallback(
-    (provider: TtsProvider) => {
-      setSettings((prev) => {
-        const voice =
-          provider === "soniox"
-            ? prev.ttsProvider === "soniox"
-              ? prev.ttsVoice
-              : "Kenji"
-            : prev.ttsProvider === "openai"
-              ? prev.ttsVoice
-              : "nova";
-        const next = { ...prev, ttsProvider: provider, ttsVoice: voice };
-        saveSettings(next);
-        return next;
-      });
-    },
-    []
-  );
+  const setTtsProvider = useCallback((_provider: TtsProvider) => {
+    setSettings((prev) => {
+      const voice = SONIOX_VOICE_OPTIONS.some((o) => o.id === prev.ttsVoice)
+        ? prev.ttsVoice
+        : "Mina";
+      const next = { ...prev, ttsProvider: "soniox" as const, ttsVoice: voice };
+      saveSettings(next);
+      return next;
+    });
+  }, []);
 
   const setTtsVoice = useCallback(
     (voice: string) => update({ ttsVoice: voice }),

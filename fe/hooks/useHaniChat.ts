@@ -16,6 +16,8 @@ import {
 import type { PracticeMode } from "@/lib/practice/mode";
 import { addVoiceMinutes, saveLastPreview } from "@/lib/home/companion";
 import { clearConversationHistory } from "@/lib/sessions/api";
+import { useCompanionProfile } from "@/hooks/useCompanionProfile";
+import { sonioxVoiceForPreset } from "@/lib/tts/voice-map";
 import { HaniWsClient } from "@/lib/ws/hani-client";
 
 const SESSION_KEY = "hani_session_id";
@@ -27,6 +29,13 @@ function uid() {
 export function useHaniChat(practiceMode: PracticeMode) {
   const { user, token } = useAuth();
   const { showVietnamese, ttsProvider, ttsVoice, ttsLanguage } = useSettings();
+  const { ttsVoice: profileVoice } = useCompanionProfile();
+  const effectiveVoice =
+    profileVoice ||
+    ttsVoice ||
+    (user?.selected_character_id
+      ? sonioxVoiceForPreset(user.selected_character_id)
+      : "Mina");
   const voiceEnabled = practiceMode === "speak";
   const getSonioxApiKey = useMemo(
     () => createSonioxKeyFetcher(token ?? ""),
@@ -343,8 +352,8 @@ export function useHaniChat(practiceMode: PracticeMode) {
         },
       },
       {
-        ttsProvider,
-        ttsVoice,
+        ttsProvider: "soniox",
+        ttsVoice: effectiveVoice,
         ttsLanguage,
         showVietnamese,
         practiceMode,
@@ -353,7 +362,7 @@ export function useHaniChat(practiceMode: PracticeMode) {
   }, [
     token,
     ttsProvider,
-    ttsVoice,
+    effectiveVoice,
     ttsLanguage,
     showVietnamese,
     practiceMode,
@@ -384,7 +393,7 @@ export function useHaniChat(practiceMode: PracticeMode) {
     if (!token) return;
     connectRef.current();
     return () => disconnectRef.current();
-  }, [token, practiceMode, ttsProvider, ttsVoice, ttsLanguage]);
+  }, [token, practiceMode, profileVoice, ttsVoice, ttsLanguage]);
 
   const sendText = useCallback(
     (text: string) => {

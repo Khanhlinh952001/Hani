@@ -40,6 +40,10 @@ type RealtimeSession struct {
 	userGender string
 	sessionID  uuid.UUID
 
+	characterID        string
+	characterName      string
+	personalityPrompt  string
+
 	conn      *Conn
 	hub       *Hub
 	readySent bool
@@ -264,22 +268,35 @@ func NewRealtimeSession(
 	sessionID uuid.UUID,
 	conn *Conn,
 	hub *Hub,
+	characterID, characterName, personalityPrompt string,
 	ttsProvider, ttsVoice, ttsLanguage string,
 	showVietnamese bool,
 	voiceEnabled bool,
 ) *RealtimeSession {
+	if characterID == "" {
+		characterID = "hani"
+	}
+	if characterName == "" {
+		characterName = "Hani"
+	}
+	if ttsVoice == "" {
+		ttsVoice = "nova"
+	}
 	return &RealtimeSession{
-		connID:         newConnID(),
-		userID:         userID,
-		userName:       userName,
-		userGender:     userGender,
-		sessionID:      sessionID,
-		conn:           conn,
-		hub:            hub,
-		ttsProvider:    tts.NormalizeProvider(ttsProvider),
-		ttsVoice:       ttsVoice,
-		ttsLanguage:    ttsLanguage,
-		showVietnamese: showVietnamese,
-		voiceEnabled:   voiceEnabled,
+		connID:            newConnID(),
+		userID:            userID,
+		userName:          userName,
+		userGender:        userGender,
+		sessionID:         sessionID,
+		characterID:       characterID,
+		characterName:     characterName,
+		personalityPrompt: personalityPrompt,
+		conn:              conn,
+		hub:               hub,
+		ttsProvider:       tts.NormalizeProvider(ttsProvider),
+		ttsVoice:          ttsVoice,
+		ttsLanguage:       ttsLanguage,
+		showVietnamese:    showVietnamese,
+		voiceEnabled:      voiceEnabled,
 	}
 }

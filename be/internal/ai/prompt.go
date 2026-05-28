@@ -24,11 +24,16 @@ type ReplyInput struct {
 	HoursSinceUser    float64
 	IncludeVietnamese bool
 	ProactiveKind     ProactiveKind
+	PersonalityPrompt string // per-character; empty = default Hani
 }
 
-func BuildSystemContent(stage RelationshipStage) string {
+func BuildSystemContent(stage RelationshipStage, personalityPrompt string) string {
 	var b strings.Builder
-	b.WriteString(SystemPrompt())
+	base := strings.TrimSpace(personalityPrompt)
+	if base == "" {
+		base = SystemPrompt()
+	}
+	b.WriteString(base)
 	b.WriteString("\n\n")
 	b.WriteString(stage.PromptBlock())
 	return b.String()
@@ -145,7 +150,7 @@ func turnReplyRules(includeVi bool) string {
 
 // BuildChatMessages uses multi-turn history so the model sees real conversation structure.
 func BuildChatMessages(in ReplyInput) []openai.ChatCompletionMessage {
-	system := BuildSystemContent(in.RelationshipStage) + "\n\n" + BuildTurnContext(in)
+	system := BuildSystemContent(in.RelationshipStage, in.PersonalityPrompt) + "\n\n" + BuildTurnContext(in)
 	messages := []openai.ChatCompletionMessage{
 		{Role: openai.ChatMessageRoleSystem, Content: system},
 	}

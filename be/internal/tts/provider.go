@@ -2,8 +2,6 @@ package tts
 
 import (
 	"context"
-
-	"be/internal/config"
 )
 
 // NormalizeProvider returns openai or soniox.
@@ -14,9 +12,9 @@ func NormalizeProvider(provider string) string {
 	return "openai"
 }
 
-// DefaultProvider reads TTS_PROVIDER from env (fallback openai).
+// DefaultProvider reads TTS_PROVIDER from env (fallback soniox).
 func DefaultProvider() string {
-	return NormalizeProvider(config.GetEnv("TTS_PROVIDER", "openai"))
+	return NormalizeProvider(getenv("TTS_PROVIDER", "soniox"))
 }
 
 // StreamSpeech uses env TTS_PROVIDER (legacy).

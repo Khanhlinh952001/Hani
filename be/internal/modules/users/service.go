@@ -91,6 +91,12 @@ func UpdateUserService(id string, data *User, password string) error {
 	if data.Gender != "" {
 		existing.Gender = data.Gender
 	}
+	if data.AiProfileID != nil && *data.AiProfileID != "" {
+		existing.AiProfileID = data.AiProfileID
+	}
+	if data.SelectedCharacterID != "" {
+		existing.SelectedCharacterID = data.SelectedCharacterID
+	}
 	if data.Level != 0 {
 		existing.Level = data.Level
 	}
@@ -151,6 +157,28 @@ func FindOrCreateClerkUser(clerkID, email, name string) (*User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func SetAiProfileService(userID int, profileID string, companionGender string) error {
+	existing, err := repoGetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	id := profileID
+	existing.AiProfileID = &id
+	if companionGender == "male" || companionGender == "female" {
+		// no-op on user gender; profile stores companion gender
+	}
+	return repoUpdateUser(userID, existing)
+}
+
+func SetSelectedCharacterService(userID int, characterID string) error {
+	existing, err := repoGetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	existing.SelectedCharacterID = characterID
+	return repoUpdateUser(userID, existing)
 }
 
 func DeleteUserService(id string) error {

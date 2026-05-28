@@ -11,25 +11,21 @@ export type AppSettings = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   showVietnamese: true,
-  ttsProvider: "openai",
-  ttsVoice: "nova",
+  ttsProvider: "soniox",
+  ttsVoice: "Mina",
   ttsLanguage: "ko",
 };
 
+/** TTS is Soniox-only; OpenAI is used for chat on the server. */
 export const TTS_PROVIDER_OPTIONS: {
   id: TtsProvider;
   label: string;
   desc: string;
 }[] = [
   {
-    id: "openai",
-    label: "OpenAI TTS",
-    desc: "Giọng nova, shimmer… — cần OPENAI_API_KEY trên server",
-  },
-  {
     id: "soniox",
     label: "Soniox TTS",
-    desc: "Giọng Kenji, Mina… — cần SONIOX_API_KEY trên server",
+    desc: "Kenji, Mina, Emma — cần SONIOX_API_KEY trên server",
   },
 ];
 
@@ -43,9 +39,15 @@ export const TTS_VOICE_OPTIONS = [
 ] as const;
 
 export const SONIOX_VOICE_OPTIONS = [
-  { id: "Kenji", label: "Kenji", desc: "Nam — tiếng Hàn (mặc định)" },
-  { id: "Mina", label: "Mina", desc: "Nữ — tiếng Hàn / Việt" },
-  { id: "Emma", label: "Emma", desc: "Nữ — đa ngôn ngữ" },
+  { id: "Mina", label: "Mina", desc: "Nữ — nhẹ, ấm" },
+  { id: "Nina", label: "Nina", desc: "Nữ — sáng, năng động" },
+  { id: "Claire", label: "Claire", desc: "Nữ — rõ, tự tin" },
+  { id: "Emma", label: "Emma", desc: "Nữ — tự nhiên, thân thiện" },
+  { id: "Maya", label: "Maya", desc: "Nữ — ổn định, ấm" },
+  { id: "Grace", label: "Grace", desc: "Nữ — nhẹ nhàng, êm" },
+  { id: "Kenji", label: "Kenji", desc: "Nam — bình tĩnh" },
+  { id: "Daniel", label: "Daniel", desc: "Nam — trưởng thành" },
+  { id: "Noah", label: "Noah", desc: "Nam — trẻ, sôi nổi" },
 ] as const;
 
 export const TTS_LANGUAGE_OPTIONS: { id: TtsLanguage; label: string; desc: string }[] = [

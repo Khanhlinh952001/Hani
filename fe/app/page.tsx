@@ -1,10 +1,13 @@
 import { RequireAuth } from "@/components/RequireAuth";
+import { RequireCharacter } from "@/components/RequireCharacter";
 import { HomeView } from "@/components/home/HomeView";
 
 export default function Home() {
   return (
     <RequireAuth>
-      <HomeView />
+      <RequireCharacter>
+        <HomeView />
+      </RequireCharacter>
     </RequireAuth>
   );
 }

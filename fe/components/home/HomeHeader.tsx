@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import { HaniMark } from "@/components/brand/HaniMark";
+import { useCompanionProfile } from "@/hooks/useCompanionProfile";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -18,17 +19,25 @@ export function HomeHeader({
   moodEmoji,
   moodKo,
 }: Props) {
+  const { avatarUrl, displayName } = useCompanionProfile();
+
   return (
     <header className="home-header">
       <div className="home-header-avatar-wrap">
-        <HaniMark size="xl" className="home-header-avatar" pulse />
+        <HaniMark
+          size="xl"
+          className="home-header-avatar"
+          pulse
+          src={avatarUrl}
+          alt={displayName}
+        />
         <span className="hani-avatar-online" title="Online">
           <span className="sr-only">Online</span>
         </span>
       </div>
 
       <div className="home-header-copy">
-        <p className="home-header-name">Hani</p>
+        <p className="home-header-name">{displayName}</p>
         <p className="home-header-status">
           <span className="home-header-mood">
             {moodEmoji} {moodKo}

@@ -64,20 +64,27 @@ func repoUpdateUser(id int, data *User) error {
 		return result.Error
 	}
 
-	return db.DB.Model(&user).Updates(map[string]interface{}{
-		"name":         data.Name,
-		"email":        data.Email,
-		"password":     data.Password,
-		"phone_number": data.PhoneNumber,
-		"provider":     data.Provider,
-		"provider_id":  data.ProviderId,
-		"avatar":       data.Avatar,
-		"gender":       data.Gender,
-		"level":        data.Level,
-		"address":      data.Address,
-		"status":       data.Status,
-		"role":         data.Role,
-	}).Error
+	updates := map[string]interface{}{
+		"name":                  data.Name,
+		"email":                 data.Email,
+		"password":              data.Password,
+		"phone_number":          data.PhoneNumber,
+		"provider":              data.Provider,
+		"provider_id":           data.ProviderId,
+		"avatar":                data.Avatar,
+		"gender":                data.Gender,
+		"selected_character_id": data.SelectedCharacterID,
+		"level":                 data.Level,
+		"address":               data.Address,
+		"status":                data.Status,
+		"role":                  data.Role,
+	}
+	if data.AiProfileID != nil {
+		updates["ai_profile_id"] = *data.AiProfileID
+	} else {
+		updates["ai_profile_id"] = nil
+	}
+	return db.DB.Model(&user).Updates(updates).Error
 }
 
 func repoDeleteUser(id int) error {

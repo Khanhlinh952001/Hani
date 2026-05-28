@@ -2,12 +2,10 @@ import {
   AppSettings,
   DEFAULT_SETTINGS,
   SONIOX_VOICE_OPTIONS,
-  TTS_VOICE_OPTIONS,
   type TtsLanguage,
   type TtsProvider,
 } from "./types";
 
-const OPENAI_VOICE_IDS = new Set(TTS_VOICE_OPTIONS.map((v) => v.id));
 const SONIOX_VOICE_IDS = new Set(SONIOX_VOICE_OPTIONS.map((v) => v.id));
 
 const KEY = "hani_settings";
@@ -17,25 +15,30 @@ function parseLanguage(v: unknown): TtsLanguage {
   return DEFAULT_SETTINGS.ttsLanguage;
 }
 
-function parseProvider(v: unknown): TtsProvider {
-  if (v === "soniox" || v === "openai") return v;
-  return DEFAULT_SETTINGS.ttsProvider;
+function parseProvider(_v: unknown): TtsProvider {
+  return "soniox";
 }
 
 function parseVoice(voice: unknown, provider: TtsProvider): string {
   if (typeof voice !== "string") {
-    return provider === "soniox"
-      ? SONIOX_VOICE_OPTIONS[0].id
-      : DEFAULT_SETTINGS.ttsVoice;
+    return SONIOX_VOICE_OPTIONS[0].id;
   }
-  if (provider === "soniox") {
-    return SONIOX_VOICE_IDS.has(voice as (typeof SONIOX_VOICE_OPTIONS)[number]["id"])
-      ? voice
-      : SONIOX_VOICE_OPTIONS[0].id;
+  if (SONIOX_VOICE_IDS.has(voice as (typeof SONIOX_VOICE_OPTIONS)[number]["id"])) {
+    return voice;
   }
-  return OPENAI_VOICE_IDS.has(voice as (typeof TTS_VOICE_OPTIONS)[number]["id"])
-    ? voice
-    : DEFAULT_SETTINGS.ttsVoice;
+  // Migrate old OpenAI voice ids saved in localStorage.
+  const openaiToSoniox: Record<string, string> = {
+    nova: "Mina",
+    shimmer: "Mina",
+    alloy: "Emma",
+    echo: "Kenji",
+    fable: "Kenji",
+    onyx: "Kenji",
+  };
+  if (openaiToSoniox[voice]) {
+    return openaiToSoniox[voice];
+  }
+  return SONIOX_VOICE_OPTIONS[0].id;
 }
 
 export function loadSettings(): AppSettings {

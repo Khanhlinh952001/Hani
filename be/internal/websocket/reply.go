@@ -7,6 +7,7 @@ import (
 	"be/internal/ai"
 	"be/internal/conversation"
 	"be/internal/memory"
+	"be/internal/modules/characters"
 )
 
 func toAITurns(recent []conversation.Turn) []ai.Turn {
@@ -57,6 +58,7 @@ func (s *RealtimeSession) buildReplyInput(
 		HoursSinceUser:    hoursSince,
 		IncludeVietnamese: s.showVietnamese,
 		ProactiveKind:     proactive,
+		PersonalityPrompt: s.personalityPrompt,
 	}
 	in.InnerThought = ai.GenerateInnerThought(in)
 	return in
@@ -104,6 +106,7 @@ func (s *RealtimeSession) sendOpening(ctx context.Context) error {
 			EmotionalMemories: retrieved.Emotional,
 			TimeContext:       ai.FormatTimeContext(now),
 			IncludeVietnamese: s.showVietnamese,
+			PersonalityPrompt: s.personalityPrompt,
 		}, onDelta)
 	}, true)
 	return err
@@ -148,6 +151,7 @@ func (s *RealtimeSession) sendProactiveReachOut(
 			HoursSinceUser:    hoursSince,
 			IncludeVietnamese: s.showVietnamese,
 			ProactiveKind:     kind,
+			PersonalityPrompt: s.personalityPrompt,
 		}, onDelta)
 	}, true)
 	return err
@@ -185,6 +189,7 @@ func (s *RealtimeSession) sendResume(ctx context.Context, recent []conversation.
 			TimeContext:       turnIn.TimeContext,
 			HoursSinceUser:    turnIn.HoursSinceUser,
 			IncludeVietnamese: s.showVietnamese,
+			PersonalityPrompt: s.personalityPrompt,
 		}, onDelta)
 	}, true)
 	return err
@@ -212,6 +217,7 @@ func (s *RealtimeSession) replyToUser(ctx context.Context, userText string) erro
 		s.life = ai.EvolveLifeAfterExchange(s.life, userText)
 		s.mood = ai.DeriveMood(s.emotion, s.life, 0)
 		memory.SaveFromExchange(s.userID, userText, reply.Korean)
+		characters.TouchInteraction(s.userID, s.characterID)
 	}
 	return err
 }

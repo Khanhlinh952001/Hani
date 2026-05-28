@@ -7,8 +7,6 @@ import (
 	"io"
 	"os"
 
-	"be/internal/config"
-
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -38,7 +36,7 @@ func voiceFromName(name string) openai.SpeechVoice {
 }
 
 func Voice() openai.SpeechVoice {
-	return voiceFromName(config.GetEnv("OPENAI_TTS_VOICE", "nova"))
+	return voiceFromName(getenv("OPENAI_TTS_VOICE", "nova"))
 }
 
 func voiceForRequest(opts *Options) openai.SpeechVoice {
@@ -49,7 +47,7 @@ func voiceForRequest(opts *Options) openai.SpeechVoice {
 }
 
 func Model() openai.SpeechModel {
-	m := config.GetEnv("OPENAI_TTS_MODEL", "tts-1")
+	m := getenv("OPENAI_TTS_MODEL", "tts-1")
 	if m == "tts-1-hd" {
 		return openai.TTSModel1HD
 	}

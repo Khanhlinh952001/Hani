@@ -259,6 +259,11 @@
       0 0 0 2px #ffffff,
       0 0 0 3.5px rgb(255 92 138 / 0.55);
   }
+  /* App logo — match icon canvas (#fff7fa), no dark transparent bleed */
+  .hani-brand-mark-shell {
+    background: #fff7fa;
+    box-shadow: 0 4px 16px rgb(255 92 138 / 0.18);
+  }
   .hani-avatar-ring-user {
     box-shadow:
       0 0 0 2px #ffffff,
@@ -848,6 +853,453 @@
   }
   .memory-item-meta {
     @apply m-0 mt-1.5 text-[0.6875rem] text-muted-foreground;
+  }
+}
+
+/* Create Your AI Lover */
+.create-lover-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 100% 70% at 50% 0%, #ffd6e4 0%, transparent 50%),
+    var(--hani-bg);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.create-lover-header {
+  padding: 2rem 1.25rem 0.75rem;
+  text-align: center;
+}
+
+.create-lover-mode-tabs {
+  display: inline-flex;
+  margin-top: 1rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.7);
+  border: 1px solid #f0dde6;
+}
+
+.create-lover-mode-tabs button {
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--hani-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.create-lover-mode-active {
+  background: var(--hani-gradient) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgb(255 92 138 / 0.35);
+}
+
+.create-lover-progress {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+}
+
+.create-lover-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: #f0dde6;
+  transition: all 0.25s ease;
+}
+
+.create-lover-dot-active {
+  width: 1rem;
+  border-radius: 999px;
+  background: var(--hani-accent);
+}
+
+.create-lover-step-body {
+  flex: 1;
+  padding: 0.5rem 1.25rem 1rem;
+  overflow-y: auto;
+}
+
+.create-lover-step-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.35rem;
+}
+
+.create-lover-step-sub {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--hani-muted);
+  margin: 0 0 1rem;
+}
+
+.create-lover-gender-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  max-width: 20rem;
+  margin: 0 auto;
+}
+
+.create-lover-gender-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.5rem 1rem;
+  border-radius: 1.25rem;
+  border: 2px solid #f0dde6;
+  background: rgb(255 255 255 / 0.85);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.create-lover-gender-card-active {
+  border-color: var(--hani-accent);
+  background: #fff5f9;
+  box-shadow: 0 8px 24px rgb(255 92 138 / 0.15);
+}
+
+.create-lover-personality-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.create-lover-personality-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: 1rem;
+  border: 1px solid #f0dde6;
+  background: #fff;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.create-lover-personality-card-active {
+  border-color: var(--hani-accent);
+  background: #fff0f6;
+  box-shadow: 0 4px 16px rgb(255 92 138 / 0.12);
+}
+
+.create-lover-style-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.create-lover-style-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #f0dde6;
+  background: #fff;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.create-lover-style-chip-active {
+  border-color: var(--hani-accent);
+  background: #ffe8f0;
+  color: var(--hani-accent);
+}
+
+.create-lover-voice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.create-lover-voice-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid #f0dde6;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.create-lover-voice-row-active {
+  border-color: var(--hani-accent);
+  background: #fff5f9;
+}
+
+.create-lover-name-chip {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #f0dde6;
+  background: #fff;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.create-lover-preview {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.create-lover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem 1.5rem;
+  gap: 0.5rem;
+}
+
+/* Choose Your Hani — dating-app style picker */
+.choose-hani-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -10%, #ffd6e4 0%, transparent 55%),
+    var(--hani-bg);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.choose-hani-header {
+  padding: 2.5rem 1.5rem 1rem;
+  text-align: center;
+}
+
+.choose-hani-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hani-accent);
+  margin: 0 0 0.5rem;
+}
+
+.choose-hani-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--hani-text);
+}
+
+.choose-hani-sub {
+  margin: 0.5rem auto 0;
+  max-width: 18rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--hani-muted);
+}
+
+.choose-hani-scroller {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0.5rem 1.25rem 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.choose-hani-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.choose-card {
+  position: relative;
+  flex: 0 0 min(88vw, 20rem);
+  scroll-snap-align: center;
+  border-radius: 1.5rem;
+  background: linear-gradient(165deg, #fff 0%, #fff5f9 100%);
+  border: 1px solid #f0dde6;
+  box-shadow:
+    0 4px 24px rgb(255 92 138 / 0.08),
+    0 1px 0 rgb(255 255 255 / 0.9) inset;
+  overflow: hidden;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease;
+  transform: scale(0.94);
+  opacity: 0.88;
+}
+
+.choose-card-active {
+  transform: scale(1);
+  opacity: 1;
+  box-shadow:
+    0 12px 40px rgb(255 92 138 / 0.18),
+    0 1px 0 rgb(255 255 255 / 0.95) inset;
+}
+
+.choose-card-glow {
+  position: absolute;
+  inset: -40% 0 auto;
+  height: 60%;
+  background: radial-gradient(circle, rgb(255 92 138 / 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.choose-card-avatar-wrap {
+  position: relative;
+  margin: 1.25rem auto 0;
+  width: 11rem;
+  height: 11rem;
+}
+
+.choose-card-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #fff;
+  box-shadow: 0 8px 28px rgb(255 92 138 / 0.25);
+  animation: chooseAvatarFloat 4s ease-in-out infinite;
+}
+
+.choose-card-active .choose-card-avatar-inner {
+  animation-duration: 3.2s;
+}
+
+.choose-card-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.choose-card-online {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 50%;
+  background: var(--hani-connected);
+  border: 2px solid #fff;
+  box-shadow: 0 0 8px var(--hani-connected);
+}
+
+.choose-card-body {
+  padding: 1rem 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.choose-card-name {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.choose-card-name-ko {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--hani-muted);
+}
+
+.choose-card-style {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--hani-accent);
+  font-weight: 500;
+}
+
+.choose-card-intro {
+  margin: 0.75rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--hani-text);
+  font-style: italic;
+}
+
+.choose-card-intro-vi {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--hani-muted);
+}
+
+.choose-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.choose-card-tags span {
+  font-size: 0.625rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: var(--hani-blush);
+  color: var(--hani-muted);
+}
+
+.choose-hani-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0 0.75rem;
+}
+
+.choose-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #f0dde6;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+
+.choose-dot-active {
+  width: 1.25rem;
+  border-radius: 999px;
+  background: var(--hani-accent);
+}
+
+.choose-hani-actions {
+  margin-top: auto;
+  padding: 0 1.25rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.choose-btn-preview {
+  border-color: #f0dde6;
+}
+
+.choose-btn-talk {
+  box-shadow: 0 8px 24px rgb(255 92 138 / 0.35);
+}
+
+@keyframes chooseAvatarFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
   }
 }
 

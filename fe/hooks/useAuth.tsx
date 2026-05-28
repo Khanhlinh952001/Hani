@@ -39,6 +39,7 @@ type AuthContextValue = {
   logout: () => void;
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
+  applyUser: (user: AuthUser) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -114,6 +115,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuth(t, fresh);
   }, []);
 
+  const applyUser = useCallback((fresh: AuthUser) => {
+    const t = getToken();
+    if (t) setAuth(t, fresh);
+    setUser(fresh);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -126,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateProfile,
         uploadAvatar,
+        applyUser,
       }}
     >
       {children}

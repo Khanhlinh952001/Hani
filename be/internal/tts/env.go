@@ -1,0 +1,10 @@
+package tts
+
+import "os"
+
+func getenv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}

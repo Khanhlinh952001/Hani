@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { HaniMark } from "@/components/brand/HaniMark";
+import { useCompanionProfile } from "@/hooks/useCompanionProfile";
 
 type Props = {
   showVietnamese?: boolean;
@@ -11,6 +12,7 @@ const GREETING_KO = "오늘도 만나서 반가워요 💕";
 const GREETING_VI = "Hôm nay gặp lại bạn, vui quá";
 
 export function GreetingBubble({ showVietnamese = true }: Props) {
+  const { avatarUrl, displayName } = useCompanionProfile();
   const [typed, setTyped] = useState("");
   const [done, setDone] = useState(false);
 
@@ -29,7 +31,12 @@ export function GreetingBubble({ showVietnamese = true }: Props) {
 
   return (
     <div className="home-greeting-row">
-      <HaniMark size="sm" className="shrink-0" />
+      <HaniMark
+        size="sm"
+        className="shrink-0"
+        src={avatarUrl}
+        alt={displayName}
+      />
       <div className="home-greeting-bubble">
         <p className="home-greeting-text">
           {typed}
