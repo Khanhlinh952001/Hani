@@ -78,6 +78,8 @@ func repoUpdateUser(id int, data *User) error {
 		"address":               data.Address,
 		"status":                data.Status,
 		"role":                  data.Role,
+		"subscription_plan":     data.SubscriptionPlan,
+		"is_active":             data.IsActive,
 	}
 	if data.AiProfileID != nil {
 		updates["ai_profile_id"] = *data.AiProfileID

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"be/internal/billing"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -95,6 +97,10 @@ func ClearUserMemoriesHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "memories cleared"})
+}
+
+func ResetUserUsageHandler(c *gin.Context) {
+	billing.ResetUsageHandler(c)
 }
 
 func ClearUserConversationHandler(c *gin.Context) {

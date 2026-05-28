@@ -12,6 +12,8 @@ import {
   Heart,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { fetchMe } from "@/lib/auth/api";
+import { fetchMyLoverProfile } from "@/lib/lover/api";
 import { useSettings } from "@/hooks/useSettings";
 import {
   createLoverProfile,
@@ -71,8 +73,25 @@ export function CreateLoverWizard() {
     if (authLoading) return;
     if (user?.ai_profile_id || user?.selected_character_id) {
       router.replace("/");
+      return;
     }
-  }, [authLoading, user, router]);
+    if (!user) return;
+
+    let cancelled = false;
+    fetchMyLoverProfile()
+      .then(async (profile) => {
+        if (cancelled || !profile) return;
+        const fresh = await fetchMe();
+        if (cancelled) return;
+        applyUser(fresh);
+        router.replace("/");
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, router, applyUser]);
 
   useEffect(() => {
     if (mode !== "custom") return;

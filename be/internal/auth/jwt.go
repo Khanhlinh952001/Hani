@@ -11,9 +11,14 @@ import (
 const defaultSecret = "hani-dev-secret-change-me"
 
 type Claims struct {
-	UserID int    `json:"uid"`
-	Email  string `json:"email"`
-	Name   string `json:"name"`
+	UserID    int    `json:"uid"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Role      int    `json:"role"`
+	Plan      string `json:"plan"`
+	Guest     bool   `json:"guest"`
+	GuestID   string `json:"gid,omitempty"`
+	SessionID string `json:"sid,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -24,11 +29,50 @@ func jwtSecret() []byte {
 	return []byte(defaultSecret)
 }
 
+func accessTTL() time.Duration {
+	if d := os.Getenv("JWT_ACCESS_TTL"); d != "" {
+		if parsed, err := time.ParseDuration(d); err == nil {
+			return parsed
+		}
+	}
+	return 15 * time.Minute
+}
+
+func GenerateAccessToken(userID int, email, name string, role int, plan string, guest bool, guestID, sessionID string) (string, time.Time, error) {
+	exp := time.Now().Add(accessTTL())
+	if plan == "" {
+		if guest {
+			plan = "guest"
+		} else {
+			plan = "free"
+		}
+	}
+	claims := Claims{
+		UserID:    userID,
+		Email:     email,
+		Name:      name,
+		Role:      role,
+		Plan:      plan,
+		Guest:     guest,
+		GuestID:   guestID,
+		SessionID: sessionID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(exp),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString(jwtSecret())
+	return signed, exp, err
+}
+
+// GenerateToken issues a legacy 7-day token (avoid for new clients).
 func GenerateToken(userID int, email, name string) (string, error) {
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
 		Name:   name,
+		Plan:   "free",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

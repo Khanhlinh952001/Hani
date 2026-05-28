@@ -21,6 +21,8 @@ export const ServerEvents = {
   SessionEnded: "session_ended",
   Pong: "pong",
   Error: "error",
+  QuotaExceeded: "quota_exceeded",
+  QuotaWarning: "quota_warning",
 } as const;
 
 export type HistoryMessage = {
@@ -45,6 +47,7 @@ export type ServerMessage = {
   format?: string;
   index?: number;
   finished?: boolean;
+  code?: string;
 };
 
 export type ChatMessage = {

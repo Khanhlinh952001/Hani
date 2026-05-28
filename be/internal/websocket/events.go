@@ -26,6 +26,8 @@ const (
 	EventSessionEnded      = "session_ended"
 	EventPong              = "pong"
 	EventError             = "error"
+	EventQuotaExceeded     = "quota_exceeded"
+	EventQuotaWarning      = "quota_warning"
 )
 
 // ClientMessage control payloads.
@@ -53,6 +55,7 @@ type ServerMessage struct {
 	SttContext  string           `json:"stt_context,omitempty"`
 	Messages   []HistoryMessage `json:"messages,omitempty"`
 	Message    string           `json:"message,omitempty"`
+	Code       string           `json:"code,omitempty"`
 	UserID     int    `json:"user_id,omitempty"`
 	SessionID  string `json:"session_id,omitempty"`
 	Delta      string `json:"delta,omitempty"`

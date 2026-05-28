@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"be/internal/auth"
+	"be/internal/billing"
 	"be/internal/db"
 	"be/internal/modules/characters"
 	"be/internal/modules/lover"
@@ -35,6 +37,7 @@ func ConnectDB() {
 	enableVectorExtension(conn)
 
 	autoMigrate()
+	billing.SeedPlanLimits()
 	characters.SeedCharacters()
 	lover.SeedCatalog()
 	seedDemoUser()
@@ -63,6 +66,8 @@ func seedDemoUser() {
 		Status:              1,
 		Level:               3,
 		SelectedCharacterID: "hani",
+		SubscriptionPlan:    billing.PlanFree,
+		IsActive:            true,
 	}
 	if err := db.DB.Create(&demo).Error; err != nil {
 		log.Println("seed user:", err)
@@ -84,11 +89,13 @@ func seedAdminUser() {
 			return
 		}
 		admin := users.User{
-			Name:     "Admin",
-			Email:    adminEmail,
-			Password: string(hash),
-			Role:     users.RoleAdmin,
-			Status:   1,
+			Name:             "Admin",
+			Email:            adminEmail,
+			Password:         string(hash),
+			Role:             users.RoleAdmin,
+			Status:           1,
+			SubscriptionPlan: billing.PlanPremium,
+			IsActive:         true,
 		}
 		if err := db.DB.Create(&admin).Error; err != nil {
 			log.Println("seed admin:", err)
@@ -138,6 +145,12 @@ func buildDSN() string {
 func autoMigrate() {
 	err := db.DB.AutoMigrate(
 		&users.User{},
+		&billing.PlanLimit{},
+		&billing.UserUsage{},
+		&billing.UsageLog{},
+		&billing.Guest{},
+		&auth.AuthSession{},
+		&auth.RefreshToken{},
 		&characters.Character{},
 		&characters.UserCharacterMemory{},
 		&lover.PersonalityTemplate{},

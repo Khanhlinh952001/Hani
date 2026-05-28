@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "pm2:deploy": "bash ../scripts/deploy-fe.sh",
+    "pm2:deploy:all": "bash ../scripts/deploy-be.sh && bash ../scripts/deploy-fe.sh",
+    "pm2:start": "pm2 start ../ecosystem.config.cjs --only hani-fe --env production",
+    "pm2:reload": "pm2 reload ../ecosystem.config.cjs --only hani-fe --update-env",
+    "pm2:stop": "pm2 stop hani-fe",
+    "pm2:logs": "pm2 logs hani-fe"
   },
   "dependencies": {
     "@soniox/react": "^1.0.2",

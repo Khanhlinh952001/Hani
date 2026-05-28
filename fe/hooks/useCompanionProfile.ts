@@ -14,7 +14,7 @@ export function useCompanionProfile() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user?.ai_profile_id) {
+    if (!user) {
       setProfile(null);
       return;
     }
@@ -22,11 +22,11 @@ export function useCompanionProfile() {
     fetchMyLoverProfile()
       .then((p) => {
         setProfile(p);
-        syncCompanionVoiceFromProfile(p);
+        if (p) syncCompanionVoiceFromProfile(p);
       })
       .catch(() => setProfile(null))
       .finally(() => setLoading(false));
-  }, [user?.ai_profile_id]);
+  }, [user?.id, user?.ai_profile_id]);
 
   const preset = user?.selected_character_id
     ? PRESET_AVATARS[user.selected_character_id]

@@ -13,6 +13,7 @@ func SetupRoutes(r *gin.RouterGroup) {
 	g.GET("/stats", StatsHandler)
 	g.GET("/users", ListUsersHandler)
 	g.PATCH("/users/:id", PatchUserHandler)
+	g.POST("/users/:id/reset-usage", ResetUserUsageHandler)
 	g.DELETE("/users/:id", DeleteUserHandler)
 	g.GET("/users/:id/sessions", ListUserSessionsHandler)
 	g.GET("/users/:id/memories", ListUserMemoriesHandler)

@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await apiLogin(email, password);
-    setAuth(res.token, res.user);
+    setAuth(res.token ?? res.access_token ?? "", res.user, res.refresh_token);
     setToken(res.token);
     setUser(res.user);
   }, []);
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       gender: UserGender
     ) => {
       const res = await apiRegister(name, email, password, gender);
-      setAuth(res.token, res.user);
+      setAuth(res.token ?? res.access_token ?? "", res.user, res.refresh_token);
       setToken(res.token);
       setUser(res.user);
     },

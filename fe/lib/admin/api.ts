@@ -15,9 +15,20 @@ export type AdminUser = {
   avatar?: string;
   role: number;
   status: number;
+  subscription_plan?: string;
+  is_active?: boolean;
   level?: number;
   created_at: string;
   updated_at: string;
+};
+
+export type UsageSnapshot = {
+  plan: string;
+  daily_messages: number;
+  daily_messages_limit?: number | null;
+  daily_voice_seconds: number;
+  daily_voice_limit?: number | null;
+  warning?: boolean;
 };
 
 export type AdminSession = {
@@ -74,7 +85,13 @@ export async function fetchAdminUsers(): Promise<AdminUser[]> {
 
 export async function patchAdminUser(
   id: number,
-  body: { name?: string; status?: number; role?: number }
+  body: {
+    name?: string;
+    status?: number;
+    role?: number;
+    subscription_plan?: string;
+    is_active?: boolean;
+  }
 ): Promise<AdminUser> {
   const res = await adminFetch(`/users/${id}`, {
     method: "PATCH",
@@ -106,4 +123,11 @@ export async function clearUserMemories(userId: number): Promise<void> {
 
 export async function clearUserConversation(userId: number): Promise<void> {
   await adminFetch(`/users/${userId}/clear-conversation`, { method: "POST" });
+}
+
+export async function resetUserUsage(userId: number): Promise<UsageSnapshot> {
+  const res = await adminFetch(`/users/${userId}/reset-usage`, {
+    method: "POST",
+  });
+  return res.json();
 }

@@ -56,6 +56,10 @@ func repoCreateProfile(p *AIProfile) error {
 	return db.DB.Create(p).Error
 }
 
+func repoSaveProfile(p *AIProfile) error {
+	return db.DB.Save(p).Error
+}
+
 func repoGetProfileByUserID(userID int) (*AIProfile, error) {
 	var p AIProfile
 	err := db.DB.Where("user_id = ?", userID).First(&p).Error

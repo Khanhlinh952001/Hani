@@ -1,7 +1,7 @@
 import { API_URL } from "../config";
 import type { UserGender } from "./gender";
 import type { AuthResponse, AuthUser } from "./types";
-import { getToken } from "./storage";
+import { getRefreshToken, getToken } from "./storage";
 
 async function parseError(res: Response): Promise<string> {
   const data = await res.json().catch(() => ({}));
@@ -90,4 +90,17 @@ export function authHeaders(): HeadersInit {
   const token = getToken();
   if (!token) return {};
   return { Authorization: `Bearer ${token}` };
+}
+
+export async function refreshSession(): Promise<AuthResponse> {
+  const refresh = getRefreshToken();
+  if (!refresh) throw new Error("no refresh token");
+
+  const res = await fetch(`${API_URL}/api/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refresh }),
+  });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Trash2, Volume2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
@@ -9,6 +9,8 @@ import { CompanionLayout } from "@/components/layout/CompanionLayout";
 import { HaniMark } from "@/components/brand/HaniMark";
 import { AvatarUpload } from "@/components/settings/AvatarUpload";
 import { SONIOX_VOICE_OPTIONS, TTS_LANGUAGE_OPTIONS } from "@/lib/settings/types";
+import { fetchUsage } from "@/lib/billing/api";
+import type { UsageSnapshot } from "@/lib/billing/types";
 import { clearConversationHistory } from "@/lib/sessions/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +48,13 @@ export function SettingsView() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [usage, setUsage] = useState<UsageSnapshot | null>(null);
+
+  useEffect(() => {
+    fetchUsage()
+      .then(setUsage)
+      .catch(() => setUsage(null));
+  }, []);
 
   const voiceOptions = SONIOX_VOICE_OPTIONS;
 
@@ -96,6 +105,41 @@ export function SettingsView() {
           <Alert>
             <AlertDescription>{message}</AlertDescription>
           </Alert>
+        )}
+
+        {usage && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Gói & hạn mức hôm nay</CardTitle>
+              <CardDescription>
+                Gói{" "}
+                <Badge variant="secondary" className="uppercase">
+                  {usage.plan}
+                </Badge>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p>
+                Tin nhắn:{" "}
+                <strong>{usage.daily_messages}</strong>
+                {usage.daily_messages_limit != null
+                  ? ` / ${usage.daily_messages_limit}`
+                  : " / không giới hạn"}
+              </p>
+              <p>
+                Giọng nói:{" "}
+                <strong>{Math.round(usage.daily_voice_seconds / 60)}</strong> phút
+                {usage.daily_voice_limit != null
+                  ? ` / ${Math.round(usage.daily_voice_limit / 60)} phút`
+                  : " / không giới hạn"}
+              </p>
+              {usage.warning && (
+                <p className="text-primary">
+                  Sắp hết lượt — cân nhắc nâng cấp Plus/Premium 💕
+                </p>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <Alert>

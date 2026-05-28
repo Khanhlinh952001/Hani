@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"strconv"
 	"strings"
 
 	"be/internal/modules/characters"
+	"be/internal/modules/users"
 	"be/internal/tts"
 )
 
@@ -97,30 +99,22 @@ func resolveVoice(voiceProfileID string) (*VoiceProfile, error) {
 	return v, nil
 }
 
-func CreateProfileService(userID int, in CreateProfileInput) (*PublicProfile, error) {
-	existing, err := repoGetProfileByUserID(userID)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return nil, errors.New("profile already exists")
-	}
-
+func applyCreateInput(p *AIProfile, in CreateProfileInput) error {
 	personalityID := strings.TrimSpace(in.PersonalityTemplateID)
 	tpl, err := repoGetPersonality(personalityID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	voiceID := strings.TrimSpace(in.VoiceProfileID)
 	voice, err := resolveVoice(voiceID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	name := strings.TrimSpace(in.DisplayName)
 	if name == "" {
-		return nil, errors.New("display_name is required")
+		return errors.New("display_name is required")
 	}
 
 	gender := strings.TrimSpace(in.CompanionGender)
@@ -138,20 +132,69 @@ func CreateProfileService(userID int, in CreateProfileInput) (*PublicProfile, er
 		avatar = AvatarForCompanion(gender, personalityID)
 	}
 
-	prompt := ComposePrompt(tpl, styles, gender, name)
-	profile := &AIProfile{
-		UserID:                userID,
-		DisplayName:           name,
-		CompanionGender:       gender,
-		PersonalityTemplateID: personalityID,
-		SpeakingStyleTags:     styles,
-		VoiceProfileID:        voiceID,
-		TtsVoice:              voice.VoiceID,
-		AvatarURL:             avatar,
-		ComposedPrompt:        prompt,
-		IntroMessageKO:        defaultIntroKO(name),
-		IntroMessageVI:        defaultIntroVI(name),
+	p.DisplayName = name
+	p.CompanionGender = gender
+	p.PersonalityTemplateID = personalityID
+	p.SpeakingStyleTags = styles
+	p.VoiceProfileID = voiceID
+	p.TtsVoice = voice.VoiceID
+	p.AvatarURL = avatar
+	p.ComposedPrompt = ComposePrompt(tpl, styles, gender, name)
+	p.PresetSlug = ""
+	return nil
+}
+
+func syncUserProfileLink(userID int, p *AIProfile) error {
+	if err := users.SetAiProfileService(userID, p.ID.String(), p.CompanionGender); err != nil {
+		return err
 	}
+	if p.PresetSlug != "" {
+		_ = users.SetSelectedCharacterService(userID, p.PresetSlug)
+	}
+	return nil
+}
+
+// SyncUserProfileLinkIfNeeded fixes users missing ai_profile_id when a profile row exists.
+func SyncUserProfileLinkIfNeeded(userID int) (*PublicProfile, error) {
+	p, err := repoGetProfileByUserID(userID)
+	if err != nil || p == nil {
+		return nil, err
+	}
+	u, err := users.GetUserByIDService(strconv.Itoa(userID))
+	if err != nil {
+		return nil, err
+	}
+	needsLink := u.AiProfileID == nil || strings.TrimSpace(*u.AiProfileID) == ""
+	if needsLink {
+		if err := syncUserProfileLink(userID, p); err != nil {
+			return nil, err
+		}
+	}
+	return enrichPublic(p)
+}
+
+func CreateProfileService(userID int, in CreateProfileInput) (*PublicProfile, error) {
+	existing, err := repoGetProfileByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		if err := applyCreateInput(existing, in); err != nil {
+			return nil, err
+		}
+		if err := repoSaveProfile(existing); err != nil {
+			return nil, err
+		}
+		_ = repoUpsertRelationshipStats(userID, existing.ID)
+		return enrichPublic(existing)
+	}
+
+	profile := &AIProfile{UserID: userID}
+	if err := applyCreateInput(profile, in); err != nil {
+		return nil, err
+	}
+	profile.IntroMessageKO = defaultIntroKO(profile.DisplayName)
+	profile.IntroMessageVI = defaultIntroVI(profile.DisplayName)
 
 	if err := repoCreateProfile(profile); err != nil {
 		return nil, err
@@ -160,15 +203,7 @@ func CreateProfileService(userID int, in CreateProfileInput) (*PublicProfile, er
 	return enrichPublic(profile)
 }
 
-func CreateFromPresetService(userID int, presetSlug string) (*PublicProfile, error) {
-	existing, err := repoGetProfileByUserID(userID)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return nil, errors.New("profile already exists")
-	}
-
+func buildPresetProfile(userID int, presetSlug string) (*AIProfile, error) {
 	presetSlug = strings.TrimSpace(presetSlug)
 	ch, err := characters.GetByIDService(presetSlug)
 	if err != nil {
@@ -213,7 +248,7 @@ func CreateFromPresetService(userID int, presetSlug string) (*PublicProfile, err
 		voice.VoiceID = ch.VoiceID
 	}
 
-	profile := &AIProfile{
+	return &AIProfile{
 		UserID:                userID,
 		DisplayName:           ch.Name,
 		CompanionGender:       ch.Gender,
@@ -226,8 +261,48 @@ func CreateFromPresetService(userID int, presetSlug string) (*PublicProfile, err
 		IntroMessageKO:        introKO,
 		IntroMessageVI:        introVI,
 		PresetSlug:            presetSlug,
+	}, nil
+}
+
+func applyPresetToProfile(existing *AIProfile, presetSlug string) error {
+	built, err := buildPresetProfile(existing.UserID, presetSlug)
+	if err != nil {
+		return err
+	}
+	existing.DisplayName = built.DisplayName
+	existing.CompanionGender = built.CompanionGender
+	existing.PersonalityTemplateID = built.PersonalityTemplateID
+	existing.SpeakingStyleTags = built.SpeakingStyleTags
+	existing.VoiceProfileID = built.VoiceProfileID
+	existing.TtsVoice = built.TtsVoice
+	existing.AvatarURL = built.AvatarURL
+	existing.ComposedPrompt = built.ComposedPrompt
+	existing.IntroMessageKO = built.IntroMessageKO
+	existing.IntroMessageVI = built.IntroMessageVI
+	existing.PresetSlug = built.PresetSlug
+	return nil
+}
+
+func CreateFromPresetService(userID int, presetSlug string) (*PublicProfile, error) {
+	existing, err := repoGetProfileByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		if err := applyPresetToProfile(existing, presetSlug); err != nil {
+			return nil, err
+		}
+		if err := repoSaveProfile(existing); err != nil {
+			return nil, err
+		}
+		_ = repoUpsertRelationshipStats(userID, existing.ID)
+		return enrichPublic(existing)
 	}
 
+	profile, err := buildPresetProfile(userID, presetSlug)
+	if err != nil {
+		return nil, err
+	}
 	if err := repoCreateProfile(profile); err != nil {
 		return nil, err
 	}

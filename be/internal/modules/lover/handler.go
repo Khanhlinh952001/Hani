@@ -62,7 +62,7 @@ func GetMyProfileHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	profile, err := GetProfileForUserService(userID)
+	profile, err := SyncUserProfileLinkIfNeeded(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

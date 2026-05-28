@@ -3,6 +3,7 @@ package routes
 import (
 	"be/internal/admin"
 	"be/internal/auth"
+	"be/internal/billing"
 	"be/internal/modules/characters"
 	"be/internal/modules/lover"
 	"be/internal/modules/memories"
@@ -19,22 +20,26 @@ func SetupRoutes(r *gin.Engine) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
-	r.Static("/uploads", "./uploads") // includes uploads/voices/ cached TTS previews
+	r.Static("/uploads", "./uploads")
 
 	api := r.Group("/api")
 
-	// Public
 	auth.SetupRoutes(api)
+	billing.SetupPublicRoutes(api)
 
-	// Protected
 	protected := api.Group("")
 	protected.Use(auth.RequireAuth())
-	characters.SetupRoutes(protected)
-	lover.SetupRoutes(protected)
-	sessions.SetupRoutes(protected)
-	messages.SetupRoutes(protected)
-	memories.SetupRoutes(protected)
+
+	// WebSocket + guest preview chat
 	websocket.SetupRoutes(protected)
-	admin.SetupRoutes(protected)
-	protected.POST("/soniox/temporary-key", stt.TemporaryKeyHandler)
+
+	registered := protected.Group("")
+	registered.Use(auth.RequireRegistered())
+	characters.SetupRoutes(registered)
+	lover.SetupRoutes(registered)
+	sessions.SetupRoutes(registered)
+	messages.SetupRoutes(registered)
+	memories.SetupRoutes(registered)
+	admin.SetupRoutes(registered)
+	registered.POST("/soniox/temporary-key", stt.TemporaryKeyHandler)
 }

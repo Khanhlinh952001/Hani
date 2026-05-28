@@ -59,6 +59,14 @@ func GetUserByIDService(id string) (*User, error) {
 	return repoGetUserByID(parsed)
 }
 
+func IsAdminRole(userID int) bool {
+	u, err := repoGetUserByID(userID)
+	if err != nil {
+		return false
+	}
+	return IsAdmin(u.Role)
+}
+
 func UpdateUserService(id string, data *User, password string) error {
 	parsed, err := strconv.Atoi(id)
 	if err != nil {
@@ -108,6 +116,9 @@ func UpdateUserService(id string, data *User, password string) error {
 	}
 	if data.Role != 0 {
 		existing.Role = data.Role
+	}
+	if data.SubscriptionPlan != "" {
+		existing.SubscriptionPlan = data.SubscriptionPlan
 	}
 	if password != "" {
 		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -170,6 +181,19 @@ func SetAiProfileService(userID int, profileID string, companionGender string) e
 		// no-op on user gender; profile stores companion gender
 	}
 	return repoUpdateUser(userID, existing)
+}
+
+func SetUserActiveService(id string, active bool) error {
+	parsed, err := strconv.Atoi(id)
+	if err != nil {
+		return err
+	}
+	existing, err := repoGetUserByID(parsed)
+	if err != nil {
+		return err
+	}
+	existing.IsActive = active
+	return repoUpdateUser(parsed, existing)
 }
 
 func SetSelectedCharacterService(userID int, characterID string) error {

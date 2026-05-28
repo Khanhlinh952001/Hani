@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"be/internal/conversation"
 	"be/internal/ai"
+	"be/internal/billing"
+	"be/internal/conversation"
 	"be/internal/tts"
 
 	"github.com/google/uuid"
@@ -58,6 +59,12 @@ type RealtimeSession struct {
 	relationship    ai.RelationshipStage
 	life            ai.LifeState
 	mood            ai.Mood
+
+	isGuest   bool
+	guestID   uuid.UUID
+	plan      string
+	persist   bool
+	localTurns []conversation.Turn
 }
 
 func (s *RealtimeSession) write(msg ServerMessage) error {
@@ -70,9 +77,15 @@ func (s *RealtimeSession) Run(ctx context.Context) {
 		_ = s.conn.Close()
 	}()
 
-	recent, _ := conversation.RecentTurns(s.sessionID, maxRecentTurns)
-	msgCount, _ := conversation.CountUserMessages(s.userID)
-	lastUserAt, _ := conversation.LastUserMessageAt(s.userID)
+	recent, _ := s.recentTurns(maxRecentTurns)
+	msgCount := 0
+	if !s.isGuest {
+		msgCount, _ = conversation.CountUserMessages(s.userID)
+	}
+	var lastUserAt time.Time
+	if !s.isGuest {
+		lastUserAt, _ = conversation.LastUserMessageAt(s.userID)
+	}
 	hoursSince := 999.0
 	if !lastUserAt.IsZero() {
 		hoursSince = time.Since(lastUserAt).Hours()
@@ -129,7 +142,7 @@ func (s *RealtimeSession) runOneTurn(ctx context.Context) error {
 	defer cancel()
 
 	if !s.readySent {
-		recent, _ := conversation.RecentTurns(s.sessionID, maxRecentTurns)
+		recent, _ := s.recentTurns(maxRecentTurns)
 		if err := s.sendReadyWithHistory(recent); err != nil {
 			return err
 		}
@@ -155,7 +168,7 @@ func (s *RealtimeSession) runOneTurn(ctx context.Context) error {
 			case EventPing:
 				_ = s.write(ServerMessage{Type: EventPong})
 			case EventStartListening:
-				recent, _ := conversation.RecentTurns(s.sessionID, maxRecentTurns)
+				recent, _ := s.recentTurns(maxRecentTurns)
 				_ = s.write(ServerMessage{
 					Type:       EventListening,
 					SessionID:  s.sessionID.String(),
@@ -226,7 +239,15 @@ func (s *RealtimeSession) processUtterance(ctx context.Context, final, clientVi 
 		})
 	}
 
-	vi := clientVi // from Soniox STT when using mic; typed messages may have no vi
+	if err := s.consumeMessageQuota(); err != nil {
+		return s.write(ServerMessage{
+			Type:    EventQuotaExceeded,
+			Message: "Đã hết lượt trò chuyện hôm nay. Nâng cấp Premium để tiếp tục 💕",
+			Code:    "quota_exceeded",
+		})
+	}
+
+	vi := clientVi
 	_ = s.write(ServerMessage{
 		Type:        EventFinalTranscript,
 		Text:        final,
@@ -234,11 +255,41 @@ func (s *RealtimeSession) processUtterance(ctx context.Context, final, clientVi 
 		SessionID:   s.sessionID.String(),
 	})
 
-	if _, err := conversation.SaveMessage(s.sessionID, "user", final, vi); err != nil {
-		log.Printf("[ws] save user message: %v", err)
+	if s.persist {
+		if _, err := conversation.SaveMessage(s.sessionID, "user", final, vi); err != nil {
+			log.Printf("[ws] save user message: %v", err)
+		}
+	} else {
+		s.appendLocalTurn("user", final, vi)
 	}
 
 	return s.replyToUser(ctx, final)
+}
+
+func (s *RealtimeSession) consumeMessageQuota() error {
+	if s.isGuest {
+		return billing.ConsumeGuestMessage(s.guestID)
+	}
+	return billing.ConsumeMessage(s.userID, s.plan)
+}
+
+func (s *RealtimeSession) recentTurns(limit int) ([]conversation.Turn, error) {
+	if !s.persist {
+		if len(s.localTurns) <= limit {
+			return s.localTurns, nil
+		}
+		return s.localTurns[len(s.localTurns)-limit:], nil
+	}
+	return conversation.RecentTurns(s.sessionID, limit)
+}
+
+func (s *RealtimeSession) appendLocalTurn(role, content, vi string) {
+	s.localTurns = append(s.localTurns, conversation.Turn{
+		ID:            uuid.New(),
+		Role:          role,
+		Content:       content,
+		TranslationVi: vi,
+	})
 }
 
 func (s *RealtimeSession) ttsOptions() *tts.Options {
@@ -272,6 +323,10 @@ func NewRealtimeSession(
 	ttsProvider, ttsVoice, ttsLanguage string,
 	showVietnamese bool,
 	voiceEnabled bool,
+	isGuest bool,
+	guestID uuid.UUID,
+	plan string,
+	persist bool,
 ) *RealtimeSession {
 	if characterID == "" {
 		characterID = "hani"
@@ -298,5 +353,9 @@ func NewRealtimeSession(
 		ttsLanguage:       ttsLanguage,
 		showVietnamese:    showVietnamese,
 		voiceEnabled:      voiceEnabled,
+		isGuest:           isGuest,
+		guestID:           guestID,
+		plan:              plan,
+		persist:           persist,
 	}
 }

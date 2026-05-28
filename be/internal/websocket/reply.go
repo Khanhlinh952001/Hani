@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"be/internal/ai"
+	"be/internal/billing"
 	"be/internal/conversation"
 	"be/internal/memory"
 	"be/internal/modules/characters"
@@ -108,7 +109,7 @@ func (s *RealtimeSession) sendOpening(ctx context.Context) error {
 			IncludeVietnamese: s.showVietnamese,
 			PersonalityPrompt: s.personalityPrompt,
 		}, onDelta)
-	}, true)
+	}, s.persist)
 	return err
 }
 
@@ -153,7 +154,7 @@ func (s *RealtimeSession) sendProactiveReachOut(
 			ProactiveKind:     kind,
 			PersonalityPrompt: s.personalityPrompt,
 		}, onDelta)
-	}, true)
+	}, s.persist)
 	return err
 }
 
@@ -191,18 +192,21 @@ func (s *RealtimeSession) sendResume(ctx context.Context, recent []conversation.
 			IncludeVietnamese: s.showVietnamese,
 			PersonalityPrompt: s.personalityPrompt,
 		}, onDelta)
-	}, true)
+	}, s.persist)
 	return err
 }
 
 func (s *RealtimeSession) replyToUser(ctx context.Context, userText string) error {
 	_ = s.write(ServerMessage{Type: EventTypingStart, SessionID: s.sessionID.String()})
 
-	memCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	retrieved, _ := memory.Retrieve(memCtx, s.userID, userText, memorySearchLimit)
-	cancel()
+	var retrieved memory.RetrievedMemories
+	if s.persist && billing.AllowsMemory(s.plan) {
+		memCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		retrieved, _ = memory.Retrieve(memCtx, s.userID, userText, memorySearchLimit)
+		cancel()
+	}
 
-	recent, _ := conversation.RecentTurns(s.sessionID, maxRecentTurns)
+	recent, _ := s.recentTurns(maxRecentTurns)
 	aiTurns := toAITurns(recent)
 	turnIn := s.buildReplyInput(aiTurns, userText, ai.ProactiveNone, retrieved)
 
@@ -211,13 +215,19 @@ func (s *RealtimeSession) replyToUser(ctx context.Context, userText string) erro
 
 	reply, err := s.streamAssistantTurn(aiCtx, func(onDelta func(string) error) (ai.BilingualReply, error) {
 		return ai.StreamReply(aiCtx, turnIn, onDelta)
-	}, true)
+	}, s.persist)
 	if err == nil && reply.Korean != "" {
 		s.emotion = ai.EvolveEmotionAfterExchange(s.emotion, userText, reply.Korean)
 		s.life = ai.EvolveLifeAfterExchange(s.life, userText)
 		s.mood = ai.DeriveMood(s.emotion, s.life, 0)
-		memory.SaveFromExchange(s.userID, userText, reply.Korean)
-		characters.TouchInteraction(s.userID, s.characterID)
+		if s.persist {
+			if billing.AllowsMemory(s.plan) {
+				memory.SaveFromExchange(s.userID, userText, reply.Korean)
+			}
+			characters.TouchInteraction(s.userID, s.characterID)
+		} else {
+			s.appendLocalTurn("assistant", reply.Korean, reply.Vietnamese)
+		}
 	}
 	return err
 }

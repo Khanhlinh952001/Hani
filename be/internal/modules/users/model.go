@@ -17,8 +17,10 @@ type User struct {
 	Level                 int    `json:"level"` // topik 1 2 3 4 5 6
 	Address     string    `json:"address"`
 	Status      int       `json:"status"`
-	Role        int       `json:"role"`
-	CreatedAt   time.Time `json:"created_at"`
+	Role             int       `json:"role"`
+	SubscriptionPlan string    `json:"subscription_plan" gorm:"default:free"`
+	IsActive         bool      `json:"is_active" gorm:"default:true"`
+	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 

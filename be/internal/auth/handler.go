@@ -4,9 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"be/internal/billing"
 	"be/internal/modules/users"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type registerRequest struct {
@@ -19,6 +21,26 @@ type registerRequest struct {
 type loginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type logoutRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+func authResponse(c *gin.Context, status int, pair *TokenPair, user *users.User) {
+	usage, _ := billing.GetUsageSnapshot(user.ID)
+	c.JSON(status, gin.H{
+		"access_token":  pair.AccessToken,
+		"refresh_token": pair.RefreshToken,
+		"expires_in":    pair.ExpiresIn,
+		"token":         pair.Token,
+		"user":          user,
+		"usage":         usage,
+	})
 }
 
 func RegisterHandler(c *gin.Context) {
@@ -39,10 +61,12 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	user := &users.User{
-		Name:     req.Name,
-		Email:    req.Email,
-		Gender:   req.Gender,
-		Provider: "local",
+		Name:             req.Name,
+		Email:            req.Email,
+		Gender:           req.Gender,
+		Provider:         "local",
+		SubscriptionPlan: billing.PlanFree,
+		IsActive:         true,
 	}
 	if err := users.CreateUserService(user, req.Password); err != nil {
 		if err.Error() == "email already taken" {
@@ -53,13 +77,12 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateToken(user.ID, user.Email, user.Name)
+	pair, err := IssueTokensForUser(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
 		return
 	}
-
-	c.JSON(http.StatusCreated, gin.H{"token": token, "user": user})
+	authResponse(c, http.StatusCreated, pair, user)
 }
 
 func LoginHandler(c *gin.Context) {
@@ -74,19 +97,72 @@ func LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
 		return
 	}
+	if !user.IsActive {
+		c.JSON(http.StatusForbidden, gin.H{"error": "account_banned"})
+		return
+	}
 
-	token, err := GenerateToken(user.ID, user.Email, user.Name)
+	pair, err := IssueTokensForUser(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
 		return
 	}
+	authResponse(c, http.StatusOK, pair, user)
+}
 
-	c.JSON(http.StatusOK, gin.H{"token": token, "user": user})
+func RefreshHandler(c *gin.Context) {
+	var req refreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	pair, user, err := RefreshAccess(req.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	if user != nil {
+		authResponse(c, http.StatusOK, pair, user)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"access_token":  pair.AccessToken,
+		"refresh_token": pair.RefreshToken,
+		"expires_in":    pair.ExpiresIn,
+		"token":         pair.Token,
+	})
+}
+
+func LogoutHandler(c *gin.Context) {
+	var req logoutRequest
+	_ = c.ShouldBindJSON(&req)
+	if req.RefreshToken != "" {
+		_ = RevokeRefresh(req.RefreshToken)
+	}
+	if cl, ok := ClaimsFromContext(c); ok && cl.SessionID != "" {
+		_ = RevokeSession(cl.SessionID)
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
 func MeHandler(c *gin.Context) {
+	if IsGuest(c) {
+		gid, err := uuid.Parse(GuestID(c))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guest"})
+			return
+		}
+		usage, _ := billing.GetGuestUsageSnapshot(gid)
+		c.JSON(http.StatusOK, gin.H{
+			"guest": true,
+			"plan":  billing.PlanGuest,
+			"usage": usage,
+		})
+		return
+	}
+
 	userID, ok := UserID(c)
-	if !ok {
+	if !ok || userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -96,8 +172,11 @@ func MeHandler(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, user)
+	usage, _ := billing.GetUsageSnapshot(userID)
+	c.JSON(http.StatusOK, gin.H{
+		"user":  user,
+		"usage": usage,
+	})
 }
 
 type patchMeRequest struct {
@@ -107,7 +186,7 @@ type patchMeRequest struct {
 
 func PatchMeHandler(c *gin.Context) {
 	userID, ok := UserID(c)
-	if !ok {
+	if !ok || userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}

@@ -279,6 +279,13 @@ export function useHaniChat(practiceMode: PracticeMode) {
           }
           break;
 
+        case ServerEvents.QuotaExceeded:
+          setError(
+            msg.message ??
+              "Đã hết lượt trò chuyện hôm nay. Đăng ký hoặc nâng cấp để tiếp tục."
+          );
+          setStatus("error");
+          break;
         case ServerEvents.Error:
           setError(msg.message ?? "unknown error");
           setStatus("error");

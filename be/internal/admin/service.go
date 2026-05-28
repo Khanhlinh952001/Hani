@@ -43,9 +43,11 @@ func ListUsersService() ([]users.User, error) {
 }
 
 type patchUserInput struct {
-	Name   string `json:"name"`
-	Status *int   `json:"status"`
-	Role   *int   `json:"role"`
+	Name             string `json:"name"`
+	Status           *int   `json:"status"`
+	Role             *int   `json:"role"`
+	SubscriptionPlan string `json:"subscription_plan"`
+	IsActive         *bool  `json:"is_active"`
 }
 
 func PatchUserService(id string, in patchUserInput) (*users.User, error) {
@@ -68,9 +70,16 @@ func PatchUserService(id string, in patchUserInput) (*users.User, error) {
 	if in.Role != nil {
 		patch.Role = *in.Role
 	}
-
+	if in.SubscriptionPlan != "" {
+		patch.SubscriptionPlan = in.SubscriptionPlan
+	}
 	if err := users.UpdateUserService(id, patch, ""); err != nil {
 		return nil, err
+	}
+	if in.IsActive != nil {
+		if err := users.SetUserActiveService(id, *in.IsActive); err != nil {
+			return nil, err
+		}
 	}
 	return users.GetUserByIDService(strconv.Itoa(parsed))
 }
