@@ -3,6 +3,7 @@ package main
 import (
 	"be/internal/config"
 	"be/internal/middleware"
+	"be/internal/modules/push"
 	"be/internal/routes"
 	"log"
 	"os"
@@ -33,6 +34,7 @@ func main() {
 	loadEnv()
 
 	config.ConnectDB()
+	push.StartCron()
 
 	gin.SetMode(gin.ReleaseMode)
 

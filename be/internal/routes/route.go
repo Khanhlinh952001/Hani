@@ -8,6 +8,7 @@ import (
 	"be/internal/modules/lover"
 	"be/internal/modules/memories"
 	"be/internal/modules/messages"
+	"be/internal/modules/push"
 	"be/internal/modules/sessions"
 	"be/internal/stt"
 	"be/internal/websocket"
@@ -40,6 +41,7 @@ func SetupRoutes(r *gin.Engine) {
 	sessions.SetupRoutes(registered)
 	messages.SetupRoutes(registered)
 	memories.SetupRoutes(registered)
+	push.SetupRoutes(registered)
 	admin.SetupRoutes(registered)
 	registered.POST("/soniox/temporary-key", stt.TemporaryKeyHandler)
 }

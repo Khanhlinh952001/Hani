@@ -2,9 +2,19 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Trash2, Volume2 } from "lucide-react";
+import { ArrowLeft, Bell, Trash2, Volume2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
+import {
+  disablePushNotifications,
+  enablePushNotifications,
+} from "@/components/pwa/PushRegistrar";
+import {
+  detectDeviceType,
+  isPushSupported,
+  isStandalonePWA,
+  PUSH_ENABLED_KEY,
+} from "@/lib/push/config";
 import { CompanionLayout } from "@/components/layout/CompanionLayout";
 import { HaniMark } from "@/components/brand/HaniMark";
 import { AvatarUpload } from "@/components/settings/AvatarUpload";
@@ -12,6 +22,7 @@ import { SONIOX_VOICE_OPTIONS, TTS_LANGUAGE_OPTIONS } from "@/lib/settings/types
 import { fetchUsage } from "@/lib/billing/api";
 import type { UsageSnapshot } from "@/lib/billing/types";
 import { clearConversationHistory } from "@/lib/sessions/api";
+import { sendTestPush } from "@/lib/push/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +60,12 @@ export function SettingsView() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageSnapshot | null>(null);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    setPushEnabled(localStorage.getItem(PUSH_ENABLED_KEY) === "true");
+  }, []);
 
   useEffect(() => {
     fetchUsage()
@@ -57,6 +74,47 @@ export function SettingsView() {
   }, []);
 
   const voiceOptions = SONIOX_VOICE_OPTIONS;
+
+  const handlePushToggle = useCallback(async (on: boolean) => {
+    setPushBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      if (on) {
+        const ok = await enablePushNotifications();
+        if (!ok) {
+          setError("Không bật được thông báo — hãy cho phép trong trình duyệt.");
+          setPushEnabled(false);
+          return;
+        }
+        setPushEnabled(true);
+        setMessage("Hani sẽ nhắn khi nhớ anh 💕");
+      } else {
+        await disablePushNotifications();
+        setPushEnabled(false);
+        setMessage("Đã tắt thông báo");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Thông báo thất bại");
+      setPushEnabled(false);
+    } finally {
+      setPushBusy(false);
+    }
+  }, []);
+
+  const handleTestPush = useCallback(async () => {
+    setPushBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await sendTestPush();
+      setMessage(`Đã gửi: "${res.title}" — ${res.body}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gửi test thất bại");
+    } finally {
+      setPushBusy(false);
+    }
+  }, []);
 
   const handleClearHistory = useCallback(async () => {
     if (
@@ -170,6 +228,57 @@ export function SettingsView() {
                 setMessage(null);
               }}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-base">Thông báo</CardTitle>
+              <Bell className="size-4 text-primary" />
+            </div>
+            <CardDescription>
+              Hani nhắn khi lâu không thấy anh online
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!isPushSupported() ? (
+              <p className="text-sm text-muted-foreground">
+                Trình duyệt này không hỗ trợ push notification.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <Label htmlFor="push-toggle" className="flex-1 cursor-pointer">
+                    Nhận thông báo từ Hani
+                  </Label>
+                  <Switch
+                    id="push-toggle"
+                    checked={pushEnabled}
+                    disabled={pushBusy}
+                    onCheckedChange={(v) => void handlePushToggle(v)}
+                  />
+                </div>
+                {detectDeviceType() === "ios" && !isStandalonePWA() && (
+                  <p className="text-xs text-muted-foreground">
+                    iPhone: mở bằng Safari → <strong>Chia sẻ</strong> →{" "}
+                    <strong>Thêm vào Màn hình chính</strong>, rồi mở app từ icon
+                    ngoài màn hình để nhận push.
+                  </p>
+                )}
+                {pushEnabled && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={pushBusy}
+                    onClick={() => void handleTestPush()}
+                  >
+                    {pushBusy ? "Đang gửi…" : "Gửi thử thông báo"}
+                  </Button>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 

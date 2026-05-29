@@ -64,5 +64,7 @@ pnpm-debug.log*
 fe/*.tsbuildinfo
 fe/next-env.d.ts
 
-# Certificates
+# Certificates & Firebase keys
 *.pem
+be/firebase-service-account.json
+firebase-service-account.json

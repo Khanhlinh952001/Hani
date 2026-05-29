@@ -158,6 +158,9 @@ func RefreshAccess(refreshRaw string) (*TokenPair, *users.User, error) {
 	if !u.IsActive {
 		return nil, nil, errors.New("account disabled")
 	}
+	now := time.Now()
+	_ = db.DB.Model(&sess).Update("last_seen_at", now).Error
+	_ = db.DB.Model(&users.User{}).Where("id = ?", u.ID).Update("last_seen_at", now).Error
 	access, exp, err := GenerateAccessToken(u.ID, u.Email, u.Name, u.Role, u.SubscriptionPlan, false, "", sess.ID.String())
 	if err != nil {
 		return nil, nil, err
