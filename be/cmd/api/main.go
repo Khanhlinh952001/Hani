@@ -25,6 +25,8 @@ func loadEnv() {
 	for _, p := range candidates {
 		if err := godotenv.Load(p); err == nil {
 			return
+		} else if _, statErr := os.Stat(p); statErr == nil {
+			log.Printf("warning: failed to parse %s: %v", p, err)
 		}
 	}
 	log.Println("no .env file, using system env")

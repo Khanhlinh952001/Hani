@@ -30,6 +30,8 @@ func getFCMClient(ctx context.Context) (*messaging.Client, error) {
 		var opts []option.ClientOption
 		if raw := os.Getenv("FIREBASE_CREDENTIALS_JSON"); raw != "" {
 			opts = append(opts, option.WithCredentialsJSON([]byte(raw)))
+		} else if path := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); path != "" {
+			opts = append(opts, option.WithCredentialsFile(path))
 		}
 		app, err := firebase.NewApp(ctx, nil, opts...)
 		if err != nil {

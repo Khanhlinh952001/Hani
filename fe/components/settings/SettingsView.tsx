@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Bell, Trash2, Volume2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
+import { useToast } from "@/hooks/useToast";
 import {
   disablePushNotifications,
   enablePushNotifications,
@@ -56,9 +57,8 @@ export function SettingsView() {
     ttsLanguage,
     setTtsLanguage,
   } = useSettings();
+  const { toast } = useToast();
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageSnapshot | null>(null);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
@@ -77,44 +77,40 @@ export function SettingsView() {
 
   const handlePushToggle = useCallback(async (on: boolean) => {
     setPushBusy(true);
-    setError(null);
-    setMessage(null);
     try {
       if (on) {
         const ok = await enablePushNotifications();
         if (!ok) {
-          setError("Không bật được thông báo — hãy cho phép trong trình duyệt.");
+          toast("Không bật được thông báo — hãy cho phép trong trình duyệt.", "destructive");
           setPushEnabled(false);
           return;
         }
         setPushEnabled(true);
-        setMessage("Hani sẽ nhắn khi nhớ anh 💕");
+        toast("Hani sẽ nhắn khi nhớ anh 💕");
       } else {
         await disablePushNotifications();
         setPushEnabled(false);
-        setMessage("Đã tắt thông báo");
+        toast("Đã tắt thông báo");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Thông báo thất bại");
+      toast(e instanceof Error ? e.message : "Thông báo thất bại", "destructive");
       setPushEnabled(false);
     } finally {
       setPushBusy(false);
     }
-  }, []);
+  }, [toast]);
 
   const handleTestPush = useCallback(async () => {
     setPushBusy(true);
-    setError(null);
-    setMessage(null);
     try {
       const res = await sendTestPush();
-      setMessage(`Đã gửi: "${res.title}" — ${res.body}`);
+      toast(`Đã gửi: "${res.title}" — ${res.body}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Gửi test thất bại");
+      toast(e instanceof Error ? e.message : "Gửi test thất bại", "destructive");
     } finally {
       setPushBusy(false);
     }
-  }, []);
+  }, [toast]);
 
   const handleClearHistory = useCallback(async () => {
     if (
@@ -126,17 +122,16 @@ export function SettingsView() {
     }
 
     setBusy(true);
-    setError(null);
-    setMessage(null);
     try {
       await clearConversationHistory();
       localStorage.removeItem(SESSION_KEY);
+      toast("Đã xóa lịch sử trò chuyện");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Xóa thất bại");
+      toast(e instanceof Error ? e.message : "Xóa thất bại", "destructive");
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [toast]);
 
   return (
     <CompanionLayout>
@@ -154,17 +149,6 @@ export function SettingsView() {
       </header>
 
       <main className="flex-1 space-y-4 overflow-y-auto p-4 pb-8">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {message && (
-          <Alert>
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
-
         {usage && (
           <Card>
             <CardHeader className="pb-2">
@@ -219,14 +203,8 @@ export function SettingsView() {
           </CardHeader>
           <CardContent>
             <AvatarUpload
-              onSuccess={(msg) => {
-                setMessage(msg);
-                setError(null);
-              }}
-              onError={(msg) => {
-                setError(msg);
-                setMessage(null);
-              }}
+              onSuccess={(msg) => toast(msg)}
+              onError={(msg) => toast(msg, "destructive")}
             />
           </CardContent>
         </Card>
