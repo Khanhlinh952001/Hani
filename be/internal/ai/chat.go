@@ -147,8 +147,8 @@ func ParseJSONBilingual(raw string) (BilingualReply, error) {
 	if err := json.Unmarshal([]byte(raw), &j); err != nil {
 		return BilingualReply{}, err
 	}
-	ko := firstSentence(strings.TrimSpace(j.Korean))
-	vi := firstSentence(strings.TrimSpace(j.Vietnamese))
+	ko := cleanDisplayText(strings.TrimSpace(j.Korean))
+	vi := cleanDisplayText(strings.TrimSpace(j.Vietnamese))
 	if ko == "" || vi == "" {
 		return BilingualReply{}, fmt.Errorf("missing korean or vietnamese field")
 	}

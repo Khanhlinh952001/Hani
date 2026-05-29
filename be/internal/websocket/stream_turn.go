@@ -3,9 +3,11 @@ package websocket
 import (
 	"context"
 	"log"
+	"strings"
 
 	"be/internal/ai"
 	"be/internal/conversation"
+	"be/internal/translate"
 	"be/internal/tts"
 )
 
@@ -120,9 +122,17 @@ func (s *RealtimeSession) streamAssistantTurnTextOnly(
 	return s.finishAssistantTurn(ctx, reply, persist)
 }
 
-func (s *RealtimeSession) publishAssistantText(_ context.Context, reply ai.BilingualReply, persist bool) ai.BilingualReply {
+func (s *RealtimeSession) publishAssistantText(ctx context.Context, reply ai.BilingualReply, persist bool) ai.BilingualReply {
 	if s.showVietnamese && reply.Vietnamese == "" {
 		log.Printf("[ws] missing vietnamese from LLM for: %q", reply.Korean)
+	} else if s.showVietnamese && ai.SentenceCount(reply.Korean) > ai.SentenceCount(reply.Vietnamese) {
+		if full, err := translate.ToVietnamese(ctx, reply.Korean); err == nil {
+			if full = strings.TrimSpace(full); full != "" {
+				reply.Vietnamese = full
+			}
+		} else {
+			log.Printf("[ws] complete vietnamese translation: %v", err)
+		}
 	}
 
 	_ = s.write(ServerMessage{

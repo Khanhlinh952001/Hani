@@ -8,9 +8,9 @@ import {
   useState,
 } from "react";
 import {
-  fetchMe,
   login as apiLogin,
   register as apiRegister,
+  restoreSession,
   updateProfile as apiUpdateProfile,
   uploadAvatar as apiUploadAvatar,
 } from "@/lib/auth/api";
@@ -58,23 +58,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setToken(t);
     setUser(u);
-    fetchMe()
+    restoreSession()
       .then((fresh) => {
+        if (!fresh) {
+          clearAuth();
+          setToken(null);
+          setUser(null);
+          return;
+        }
         setUser(fresh);
-        setAuth(t, fresh);
-      })
-      .catch(() => {
-        clearAuth();
-        setToken(null);
-        setUser(null);
+        setToken(getToken());
+        setAuth(getToken() ?? t, fresh);
       })
       .finally(() => setLoading(false));
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await apiLogin(email, password);
-    setAuth(res.token ?? res.access_token ?? "", res.user, res.refresh_token);
-    setToken(res.token);
+    const accessToken = res.access_token ?? res.token ?? "";
+    setAuth(accessToken, res.user, res.refresh_token);
+    setToken(accessToken);
     setUser(res.user);
   }, []);
 
@@ -86,8 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       gender: UserGender
     ) => {
       const res = await apiRegister(name, email, password, gender);
-      setAuth(res.token ?? res.access_token ?? "", res.user, res.refresh_token);
-      setToken(res.token);
+      const accessToken = res.access_token ?? res.token ?? "";
+      setAuth(accessToken, res.user, res.refresh_token);
+      setToken(accessToken);
       setUser(res.user);
     },
     []

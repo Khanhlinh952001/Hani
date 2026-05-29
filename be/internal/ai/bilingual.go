@@ -35,9 +35,6 @@ func ParseBilingual(full string) BilingualReply {
 	ko := cleanDisplayText(strings.TrimSpace(full[:idx]))
 	vi := cleanDisplayText(strings.TrimSpace(full[idx+len(ViMarker):]))
 
-	ko = firstSentence(ko)
-	vi = firstSentence(vi)
-
 	return BilingualReply{
 		Korean:     ko,
 		Vietnamese: vi,
@@ -90,7 +87,41 @@ func cleanDisplayText(s string) string {
 	if len(parts) == 0 {
 		return stripNumberedPrefix(s)
 	}
-	return strings.Join(parts, " ")
+	if len(parts) == 1 {
+		return parts[0]
+	}
+	return strings.Join(parts, "\n")
+}
+
+// SentenceCount estimates how many sentences a line contains (for translation completeness).
+func SentenceCount(s string) int {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0
+	}
+	n := 0
+	for _, line := range strings.Split(s, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		ends := 0
+		for _, r := range line {
+			switch r {
+			case '.', '?', '!', '…':
+				ends++
+			}
+		}
+		if ends == 0 {
+			n++
+		} else {
+			n += ends
+		}
+	}
+	if n == 0 {
+		return 1
+	}
+	return n
 }
 
 func isFormatMetaLine(line string) bool {
@@ -189,9 +220,9 @@ func bilingualFormatInstruction(includeVi bool) string {
 	}
 	return `Write BOTH languages yourself in one reply (no separate translation):
 
-Line 1: ONE Korean sentence (Hani speaking, spoken aloud)
-Line 2: ---VI---
-Line 3: ONE Vietnamese sentence (natural translation of line 1)
+[Korean — 1–2 short sentences, Hani speaking]
+---VI---
+[Vietnamese — translate ALL Korean sentences above; same meaning, 1–2 lines]
 
-Exactly 1 Korean + 1 Vietnamese. Never skip ---VI---.`
+Never skip ---VI---. Vietnamese must cover every Korean sentence (if 2 Korean lines, 2 Vietnamese lines or one block with both ideas).`
 }

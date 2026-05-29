@@ -119,7 +119,7 @@ func BuildTurnContext(in ReplyInput) string {
 	}
 
 	if in.IncludeVietnamese {
-		b.WriteString("\n\n[MANDATORY format every turn]\n[Korean sentence]\n---VI---\n[Vietnamese sentence]")
+		b.WriteString("\n\n[MANDATORY format every turn]\n[Korean — all sentences]\n---VI---\n[Vietnamese — full translation of all Korean]")
 	}
 
 	return b.String()
@@ -128,7 +128,7 @@ func BuildTurnContext(in ReplyInput) string {
 func turnReplyRules(includeVi bool) string {
 	if includeVi {
 		return `[this turn — bilingual]
-- YOU write both languages: 1 Korean sentence, then ---VI---, then 1 Vietnamese sentence
+- YOU write both languages: Korean (1–2 sentences), then ---VI---, then Vietnamese translating ALL Korean
 - React to their LAST message — do not restart the conversation
 - You have your OWN life — your one line can mention mood or what you were doing
 - Do NOT sound like a therapist or assistant
@@ -188,7 +188,7 @@ func BuildChatMessages(in ReplyInput) []openai.ChatCompletionMessage {
 }
 
 func appendBilingualFormatReminder(messages *[]openai.ChatCompletionMessage) {
-	reminder := "\n\n(Format: 1 Korean line, then ---VI---, then 1 Vietnamese line — you write both)"
+	reminder := "\n\n(Format: Korean lines, then ---VI---, then Vietnamese covering all Korean — you write both)"
 	if len(*messages) == 0 {
 		*messages = append(*messages, openai.ChatCompletionMessage{
 			Role:    openai.ChatMessageRoleUser,
