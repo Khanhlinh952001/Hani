@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { PracticeMode } from "@/lib/practice/mode";
 import type { AuthUser } from "@/lib/auth/types";
 import { ChatMessage } from "@/lib/ws/events";
@@ -9,6 +9,7 @@ import { useCompanionProfile } from "@/hooks/useCompanionProfile";
 import { UserAvatar } from "@/components/brand/UserAvatar";
 import { BilingualText } from "./BilingualText";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -20,6 +21,10 @@ type Props = {
   holding?: boolean;
   showVietnamese: boolean;
   practiceMode: PracticeMode;
+  hasMoreHistory?: boolean;
+  loadingMoreHistory?: boolean;
+  onLoadOlder?: () => void;
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 export function MessageList({
@@ -31,6 +36,10 @@ export function MessageList({
   holding = false,
   showVietnamese,
   practiceMode,
+  hasMoreHistory = false,
+  loadingMoreHistory = false,
+  onLoadOlder,
+  scrollRef,
 }: Props) {
   const { avatarUrl, displayName } = useCompanionProfile();
   const isSpeakMode = practiceMode === "speak";
@@ -39,6 +48,9 @@ export function MessageList({
   const showPartial =
     isListeningLive && (!!partial || holding);
   const endRef = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(0);
+  const prevFirstIdRef = useRef<string | null>(null);
+  const shouldStickBottomRef = useRef(true);
 
   const visibleMessages = isSpeakMode
     ? messages
@@ -50,9 +62,52 @@ export function MessageList({
     lastMsg?.role === "assistant" &&
     !!lastMsg.content;
 
+  const handleScroll = useCallback(() => {
+    const el = scrollRef?.current;
+    if (!el) return;
+
+    shouldStickBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+
+    if (
+      hasMoreHistory &&
+      !loadingMoreHistory &&
+      onLoadOlder &&
+      el.scrollTop < 80
+    ) {
+      onLoadOlder();
+    }
+  }, [scrollRef, hasMoreHistory, loadingMoreHistory, onLoadOlder]);
+
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, partial, status]);
+    const el = scrollRef?.current;
+    if (!el) return;
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [scrollRef, handleScroll]);
+
+  useEffect(() => {
+    const el = scrollRef?.current;
+    if (!el) return;
+
+    const firstId = visibleMessages[0]?.id ?? null;
+    const grewAtTop =
+      visibleMessages.length > prevCountRef.current &&
+      firstId !== prevFirstIdRef.current &&
+      prevFirstIdRef.current != null;
+
+    if (grewAtTop) {
+      const heightBefore = el.scrollHeight;
+      requestAnimationFrame(() => {
+        el.scrollTop += el.scrollHeight - heightBefore;
+      });
+    } else if (shouldStickBottomRef.current) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    prevCountRef.current = visibleMessages.length;
+    prevFirstIdRef.current = firstId;
+  }, [visibleMessages, partial, status, scrollRef]);
 
   return (
     <div
@@ -92,6 +147,24 @@ export function MessageList({
             />
           </div>
         )}
+
+      {(hasMoreHistory || loadingMoreHistory) && (
+        <div className="flex justify-center py-1">
+          {loadingMoreHistory ? (
+            <span className="text-xs text-muted-foreground">Đang tải tin cũ…</span>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs text-muted-foreground"
+              onClick={onLoadOlder}
+            >
+              Tải tin nhắn cũ hơn
+            </Button>
+          )}
+        </div>
+      )}
 
       {visibleMessages.map((msg, i) => {
         const isUser = msg.role === "user";

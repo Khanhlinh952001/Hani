@@ -2,6 +2,7 @@ package messages
 
 import (
 	"net/http"
+	"strconv"
 
 	"be/internal/auth"
 	"be/internal/modules/sessions"
@@ -73,6 +74,18 @@ func GetMessagesHandler(c *gin.Context) {
 	}
 	if _, err := sessions.GetSessionForUserService(sessionID, userID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	before := c.Query("before")
+	if before != "" || c.Query("limit") != "" {
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "30"))
+		page, err := GetMessagesPageService(sessionID, limit, before)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, page)
 		return
 	}
 

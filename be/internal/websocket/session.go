@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	maxRecentTurns     = 12
-	maxHistoryOnReady  = 3 // max messages sent to client on connect/reload
-	memorySearchLimit  = 5
-	turnTimeout        = 2 * time.Minute
+	maxRecentTurns    = 12
+	maxHistoryOnReady = 40 // recent messages sent to client on connect (mobile-friendly)
+	memorySearchLimit = 5
+	turnTimeout       = 2 * time.Minute
 )
 
 var errSessionEnded = errors.New("session ended")
@@ -186,17 +186,13 @@ func (s *RealtimeSession) runOneTurn(ctx context.Context) error {
 	}
 }
 
-func trimHistoryForReady(recent []conversation.Turn) []conversation.Turn {
-	if len(recent) <= maxHistoryOnReady {
-		return recent
-	}
-	return recent[len(recent)-maxHistoryOnReady:]
-}
-
 func (s *RealtimeSession) sendReadyWithHistory(recent []conversation.Turn) error {
-	visible := trimHistoryForReady(recent)
-	history := make([]HistoryMessage, 0, len(visible))
-	for _, t := range visible {
+	historyTurns, hasMore, err := s.historyForReady()
+	if err != nil {
+		return err
+	}
+	history := make([]HistoryMessage, 0, len(historyTurns))
+	for _, t := range historyTurns {
 		history = append(history, HistoryMessage{
 			ID:          t.ID.String(),
 			Role:        t.Role,
@@ -205,13 +201,30 @@ func (s *RealtimeSession) sendReadyWithHistory(recent []conversation.Turn) error
 		})
 	}
 	return s.write(ServerMessage{
-		Type:       EventReady,
-		UserID:     s.userID,
-		SessionID:  s.sessionID.String(),
-		Text:       readyHint(s.voiceEnabled),
-		SttContext: formatSTTContext(recent),
-		Messages:   history,
+		Type:           EventReady,
+		UserID:         s.userID,
+		SessionID:      s.sessionID.String(),
+		Text:           readyHint(s.voiceEnabled),
+		SttContext:     formatSTTContext(recent),
+		Messages:       history,
+		HistoryHasMore: hasMore,
 	})
+}
+
+func (s *RealtimeSession) historyForReady() ([]conversation.Turn, bool, error) {
+	if !s.persist {
+		turns := s.localTurns
+		hasMore := len(turns) > maxHistoryOnReady
+		if len(turns) > maxHistoryOnReady {
+			turns = turns[len(turns)-maxHistoryOnReady:]
+		}
+		return turns, hasMore, nil
+	}
+	page, err := conversation.RecentTurnsPage(s.sessionID, maxHistoryOnReady)
+	if err != nil {
+		return nil, false, err
+	}
+	return page.Turns, page.HasMore, nil
 }
 
 func formatSTTContext(turns []conversation.Turn) string {

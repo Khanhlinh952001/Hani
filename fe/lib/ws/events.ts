@@ -38,6 +38,7 @@ export type ServerMessage = {
   translation?: string;
   stt_context?: string;
   messages?: HistoryMessage[];
+  history_has_more?: boolean;
   message?: string;
   user_id?: number;
   session_id?: string;

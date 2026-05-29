@@ -53,7 +53,8 @@ type ServerMessage struct {
 	Text        string           `json:"text,omitempty"`
 	Translation string           `json:"translation,omitempty"`
 	SttContext  string           `json:"stt_context,omitempty"`
-	Messages   []HistoryMessage `json:"messages,omitempty"`
+	Messages        []HistoryMessage `json:"messages,omitempty"`
+	HistoryHasMore  bool             `json:"history_has_more,omitempty"`
 	Message    string           `json:"message,omitempty"`
 	Code       string           `json:"code,omitempty"`
 	UserID     int    `json:"user_id,omitempty"`

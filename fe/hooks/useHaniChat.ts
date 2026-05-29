@@ -16,6 +16,7 @@ import {
 import type { PracticeMode } from "@/lib/practice/mode";
 import { addVoiceMinutes, saveLastPreview } from "@/lib/home/companion";
 import { clearConversationHistory } from "@/lib/sessions/api";
+import { fetchMessagePage } from "@/lib/messages/api";
 import { useCompanionProfile } from "@/hooks/useCompanionProfile";
 import { sonioxVoiceForPreset } from "@/lib/tts/voice-map";
 import { HaniWsClient } from "@/lib/ws/hani-client";
@@ -24,6 +25,18 @@ const SESSION_KEY = "hani_session_id";
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function historyToChatMessages(
+  items: NonNullable<ServerMessage["messages"]>,
+  sessionId?: string
+): ChatMessage[] {
+  return items.map((m, i) => ({
+    id: m.id ?? `hist-${i}-${sessionId ?? "s"}`,
+    role: m.role === "assistant" ? "assistant" : "user",
+    content: m.content,
+    translationVi: m.translation,
+  }));
 }
 
 export function useHaniChat(practiceMode: PracticeMode) {
@@ -61,6 +74,8 @@ export function useHaniChat(practiceMode: PracticeMode) {
     setStatusState(s);
   }, []);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
+  const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const connectingRef = useRef(false);
 
@@ -149,17 +164,11 @@ export function useHaniChat(practiceMode: PracticeMode) {
             setSttContext(msg.stt_context);
           }
           if (msg.messages?.length) {
-            const history = msg.messages.slice(-3);
-            setMessages(
-              history.map((m, i) => ({
-                id: m.id ?? `hist-${i}-${msg.session_id ?? "s"}`,
-                role: m.role === "assistant" ? "assistant" : "user",
-                content: m.content,
-                translationVi: m.translation,
-              }))
-            );
+            setMessages(historyToChatMessages(msg.messages, msg.session_id));
+            setHasMoreHistory(msg.history_has_more ?? false);
             setStatus("ready");
           } else {
+            setHasMoreHistory(false);
             setStatus("thinking");
           }
           setError(null);
@@ -427,6 +436,45 @@ export function useHaniChat(practiceMode: PracticeMode) {
     [ptt, setStatus]
   );
 
+  const loadOlderMessages = useCallback(async () => {
+    if (!sessionId || loadingMoreHistory || !hasMoreHistory) return;
+
+    const first = messages[0];
+    if (!first?.id || first.id.startsWith("hist-")) return;
+
+    setLoadingMoreHistory(true);
+    try {
+      const page = await fetchMessagePage(sessionId, {
+        before: first.id,
+        limit: 30,
+      });
+      if (page.messages.length === 0) {
+        setHasMoreHistory(false);
+        return;
+      }
+
+      const older = page.messages.map((m) => ({
+        id: m.id,
+        role: (m.role === "assistant" ? "assistant" : "user") as
+          | "user"
+          | "assistant",
+        content: m.content,
+        translationVi: m.translation_vi,
+      }));
+
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m.id));
+        const unique = older.filter((m) => !seen.has(m.id));
+        return [...unique, ...prev];
+      });
+      setHasMoreHistory(page.has_more);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không tải được tin cũ");
+    } finally {
+      setLoadingMoreHistory(false);
+    }
+  }, [sessionId, messages, loadingMoreHistory, hasMoreHistory]);
+
   const clearHistory = useCallback(async () => {
     if (!token) return;
     if (
@@ -439,6 +487,7 @@ export function useHaniChat(practiceMode: PracticeMode) {
     try {
       await clearConversationHistory();
       setMessages([]);
+      setHasMoreHistory(false);
       setSessionId(null);
       localStorage.removeItem(SESSION_KEY);
       disconnect();
@@ -454,6 +503,9 @@ export function useHaniChat(practiceMode: PracticeMode) {
     sessionId,
     status,
     messages,
+    hasMoreHistory,
+    loadingMoreHistory,
+    loadOlderMessages,
     partial: ptt.partial,
     partialVi: ptt.partialVi,
     error,

@@ -81,30 +81,76 @@ func SaveMessage(sessionID uuid.UUID, role, content, translationVi string) (*mes
 
 // RecentTurns returns last N messages for prompt context (not full history).
 func RecentTurns(sessionID uuid.UUID, limit int) ([]Turn, error) {
-	var msgs []messages.Message
-	err := db.DB.Where("session_id = ?", sessionID).
-		Order("created_at desc").
-		Limit(limit).
-		Find(&msgs).Error
+	page, err := RecentTurnsPage(sessionID, limit)
 	if err != nil {
 		return nil, err
 	}
+	return page.Turns, nil
+}
 
-	// reverse to chronological
+type TurnsPage struct {
+	Turns   []Turn
+	HasMore bool
+}
+
+func turnsFromMessages(msgs []messages.Message) []Turn {
 	turns := make([]Turn, 0, len(msgs))
 	for i := len(msgs) - 1; i >= 0; i-- {
-		role := msgs[i].Role
-		if role == "assistant" {
-			role = "assistant"
-		}
 		turns = append(turns, Turn{
 			ID:            msgs[i].ID,
-			Role:          role,
+			Role:          msgs[i].Role,
 			Content:       msgs[i].Content,
 			TranslationVi: msgs[i].TranslationVi,
 		})
 	}
-	return turns, nil
+	return turns
+}
+
+// RecentTurnsPage returns the latest messages (chronological) plus whether older exist.
+func RecentTurnsPage(sessionID uuid.UUID, limit int) (TurnsPage, error) {
+	if limit <= 0 {
+		limit = 40
+	}
+	var msgs []messages.Message
+	err := db.DB.Where("session_id = ?", sessionID).
+		Order("created_at desc").
+		Limit(limit + 1).
+		Find(&msgs).Error
+	if err != nil {
+		return TurnsPage{}, err
+	}
+	hasMore := len(msgs) > limit
+	if hasMore {
+		msgs = msgs[:limit]
+	}
+	return TurnsPage{Turns: turnsFromMessages(msgs), HasMore: hasMore}, nil
+}
+
+// TurnsBefore returns messages older than beforeID (chronological).
+func TurnsBefore(sessionID, beforeID uuid.UUID, limit int) (TurnsPage, error) {
+	if limit <= 0 {
+		limit = 30
+	}
+	var anchor messages.Message
+	if err := db.DB.First(&anchor, "id = ?", beforeID).Error; err != nil {
+		return TurnsPage{}, errors.New("message not found")
+	}
+	var msgs []messages.Message
+	err := db.DB.Where(
+		"session_id = ? AND (created_at < ? OR (created_at = ? AND id < ?))",
+		sessionID, anchor.CreatedAt, anchor.CreatedAt, beforeID,
+	).
+		Order("created_at desc, id desc").
+		Limit(limit + 1).
+		Find(&msgs).Error
+	if err != nil {
+		return TurnsPage{}, err
+	}
+	hasMore := len(msgs) > limit
+	if hasMore {
+		msgs = msgs[:limit]
+	}
+	return TurnsPage{Turns: turnsFromMessages(msgs), HasMore: hasMore}, nil
 }
 
 // CountUserMessages counts all messages across a user's sessions (relationship depth).

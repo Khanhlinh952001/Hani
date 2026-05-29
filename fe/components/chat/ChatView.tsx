@@ -1,11 +1,11 @@
 "use client";
 
+import { useRef } from "react";
 import type { PracticeMode } from "@/lib/practice/mode";
 import { useHaniChat } from "@/hooks/useHaniChat";
 import { useSettings } from "@/hooks/useSettings";
 import { CompanionLayout } from "@/components/layout/CompanionLayout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConnectionBar } from "./ConnectionBar";
 import { MessageList } from "./MessageList";
 import { PushToTalkButton } from "./PushToTalkButton";
@@ -18,6 +18,7 @@ type Props = {
 export function ChatView({ practiceMode }: Props) {
   const { showVietnamese } = useSettings();
   const chat = useHaniChat(practiceMode);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const isSpeakMode = practiceMode === "speak";
 
   const footer = isSpeakMode ? (
@@ -60,18 +61,25 @@ export function ChatView({ practiceMode }: Props) {
       )}
 
       <div className="message-scroll-wrap min-h-0 flex-1">
-        <ScrollArea className="message-scroll h-full">
+        <div
+          ref={scrollRef}
+          className="message-scroll h-full overflow-y-auto overscroll-contain px-3"
+        >
           <MessageList
-          user={chat.user}
-          messages={chat.messages}
-          partial={chat.partial}
-          partialVi={showVietnamese ? chat.partialVi : undefined}
-          status={chat.status}
-          holding={chat.holding}
-          showVietnamese={showVietnamese}
-          practiceMode={practiceMode}
+            user={chat.user}
+            messages={chat.messages}
+            partial={chat.partial}
+            partialVi={showVietnamese ? chat.partialVi : undefined}
+            status={chat.status}
+            holding={chat.holding}
+            showVietnamese={showVietnamese}
+            practiceMode={practiceMode}
+            hasMoreHistory={chat.hasMoreHistory}
+            loadingMoreHistory={chat.loadingMoreHistory}
+            onLoadOlder={() => void chat.loadOlderMessages()}
+            scrollRef={scrollRef}
           />
-        </ScrollArea>
+        </div>
       </div>
     </CompanionLayout>
   );

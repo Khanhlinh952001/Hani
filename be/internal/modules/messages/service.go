@@ -27,6 +27,38 @@ func GetMessagesBySessionIDService(sessionID string) ([]Message, error) {
 	return repoGetMessagesBySessionID(parsed)
 }
 
+type MessagePage struct {
+	Messages []Message `json:"messages"`
+	HasMore  bool      `json:"has_more"`
+}
+
+func GetMessagesPageService(sessionID string, limit int, beforeID string) (*MessagePage, error) {
+	parsed, err := uuid.Parse(sessionID)
+	if err != nil {
+		return nil, errors.New("invalid session id")
+	}
+	if !repoSessionExists(parsed) {
+		return nil, errors.New("session not found")
+	}
+
+	var before *uuid.UUID
+	if beforeID != "" {
+		id, err := uuid.Parse(beforeID)
+		if err != nil {
+			return nil, errors.New("invalid before id")
+		}
+		before = &id
+	} else if limit <= 0 {
+		limit = 40
+	}
+
+	msgs, hasMore, err := repoGetMessagesPage(parsed, limit, before)
+	if err != nil {
+		return nil, err
+	}
+	return &MessagePage{Messages: msgs, HasMore: hasMore}, nil
+}
+
 func GetMessageByIDService(id string) (*Message, error) {
 	parsed, err := uuid.Parse(id)
 	if err != nil {
