@@ -12,7 +12,6 @@ import (
 	"be/internal/modules/lover"
 	"be/internal/modules/memories"
 	"be/internal/modules/messages"
-	"be/internal/modules/push"
 	"be/internal/modules/sessions"
 	"be/internal/modules/users"
 
@@ -161,8 +160,6 @@ func autoMigrate() {
 		&sessions.Session{},
 		&messages.Message{},
 		&memories.Memory{},
-		&push.UserDevice{},
-		&push.Notification{},
 	)
 
 	if err != nil {

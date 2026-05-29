@@ -34,6 +34,9 @@ func main() {
 	loadEnv()
 
 	config.ConnectDB()
+	if err := push.AutoMigrate(); err != nil {
+		log.Fatal("push AutoMigrate failed:", err)
+	}
 	push.StartCron()
 
 	gin.SetMode(gin.ReleaseMode)
